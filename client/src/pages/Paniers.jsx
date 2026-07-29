@@ -239,7 +239,7 @@ export default function Paniers() {
                   <button
                     onClick={(e) => { e.stopPropagation(); setPendingDelete(panier); }}
                     disabled={deletingId === panier._id}
-                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                    className="text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
                   >
                     {deletingId === panier._id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                   </button>
