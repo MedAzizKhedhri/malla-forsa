@@ -4,7 +4,7 @@ import { useAppToast } from '../components/ToastProvider';
 import {
   User, Phone, MapPin, Plus, Loader2, Trash2, Edit, X, Search,
   Calendar, Euro, Coins, FileText, Share2, ArrowLeft, ShoppingCart,
-  CreditCard, AlertTriangle, CheckCircle2, Link2, Unlink, ImageIcon
+  CreditCard, AlertTriangle, CheckCircle2, Link2, Unlink, ImageIcon, Star
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -20,6 +20,7 @@ export default function Clients() {
   const [paniers, setPaniers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({ isPriority: false, dette: false, closed: false });
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
@@ -51,19 +52,43 @@ export default function Clients() {
   const [showAgreement, setShowAgreement] = useState(false);
 
   useEffect(() => {
-    fetchClients();
     api.get('/emails/accounts').then(res => setBuyerAccounts(res.data)).catch(() => {});
     api.get('/order-sessions').then(res => setPaniers(res.data)).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetchClients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
+
   const fetchClients = async () => {
     try {
-      const res = await api.get('/clients');
+      const params = new URLSearchParams();
+      if (filters.isPriority) params.set('isPriority', 'true');
+      if (filters.dette) params.set('dette', 'true');
+      if (filters.closed) params.set('closed', 'true');
+      const qs = params.toString();
+      const res = await api.get(`/clients${qs ? `?${qs}` : ''}`);
       setClients(res.data);
     } catch {
       toast.error('Impossible de charger les clients.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleFilter = (key) => {
+    setFilters(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleTogglePriority = async (client, e) => {
+    e.stopPropagation();
+    try {
+      await api.put(`/clients/${client._id}`, { isPriority: !client.isPriority });
+      toast.success(!client.isPriority ? 'Client marqué prioritaire.' : 'Priorité retirée.');
+      fetchClients();
+    } catch {
+      toast.error('Erreur lors de la mise à jour de la priorité.');
     }
   };
 
@@ -401,6 +426,41 @@ export default function Clients() {
         )}
       </div>
 
+      {!selectedClient && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => toggleFilter('isPriority')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
+              filters.isPriority
+                ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400'
+                : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Star size={13} className={filters.isPriority ? 'fill-amber-500 text-amber-500' : ''} /> Prioritaires
+          </button>
+          <button
+            onClick={() => toggleFilter('dette')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
+              filters.dette
+                ? 'bg-red-50 border-red-300 text-red-700 dark:bg-red-950/20 dark:border-red-800 dark:text-red-400'
+                : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <AlertTriangle size={13} /> En dette
+          </button>
+          <button
+            onClick={() => toggleFilter('closed')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
+              filters.closed
+                ? 'bg-slate-200 border-slate-400 text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100'
+                : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            Commandes fermées
+          </button>
+        </div>
+      )}
+
       {/* Main Grid: Client List or Detail View */}
       {!selectedClient ? (
         // CLIENTS LIST VIEW
@@ -422,7 +482,11 @@ export default function Clients() {
               <div
                 key={client._id}
                 onClick={() => handleSelectClient(client)}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6 hover:shadow-md cursor-pointer transition-all relative overflow-hidden group hover:-translate-y-0.5"
+                className={`rounded-2xl border bg-white dark:bg-slate-900 shadow-sm p-6 hover:shadow-md cursor-pointer transition-all relative overflow-hidden group hover:-translate-y-0.5 ${
+                  client.isPriority
+                    ? 'border-amber-300 dark:border-amber-800'
+                    : 'border-slate-200 dark:border-slate-800'
+                }`}
               >
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start justify-between mb-4">
@@ -430,6 +494,15 @@ export default function Clients() {
                     <User size={20} className="text-indigo-500" /> {client.name}
                   </h3>
                   <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => handleTogglePriority(client, e)}
+                      className={`transition-colors p-1.5 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 ${
+                        client.isPriority ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500'
+                      }`}
+                      title={client.isPriority ? 'Retirer la priorité' : 'Marquer prioritaire'}
+                    >
+                      <Star size={16} className={client.isPriority ? 'fill-amber-500' : ''} />
+                    </button>
                     <button
                       onClick={(e) => openEdit(client, e)}
                       className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
