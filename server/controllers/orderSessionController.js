@@ -5,7 +5,7 @@ const ClientPanier = require('../models/ClientPanier');
 exports.getOrderSessions = async (req, res) => {
   try {
     const sessions = await OrderSession.find()
-      .populate('compteAcheteur', 'label')
+      .populate('compteAcheteur', 'label email')
       .sort({ createdAt: -1 });
 
     // Attach a lightweight client count per panier so the list view can show
@@ -33,7 +33,7 @@ exports.getOrderSessions = async (req, res) => {
 exports.getOrderSessionById = async (req, res) => {
   try {
     const session = await OrderSession.findById(req.params.id)
-      .populate('compteAcheteur', 'label');
+      .populate('compteAcheteur', 'label email');
     if (!session) return res.status(404).json({ message: 'OrderSession not found' });
 
     const colis = await Colis.find({ panier: session._id }).sort({ createdAt: 1 });

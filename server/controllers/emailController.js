@@ -21,6 +21,20 @@ exports.createBuyerAccount = async (req, res) => {
   }
 };
 
+exports.updateBuyerAccount = async (req, res) => {
+  try {
+    const account = await BuyerAccount.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!account) return res.status(404).json({ message: 'Account not found' });
+    res.json(account);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 exports.deleteBuyerAccount = async (req, res) => {
   try {
     const account = await BuyerAccount.findByIdAndDelete(req.params.id);

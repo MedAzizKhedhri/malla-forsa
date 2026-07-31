@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  getBuyerAccounts, 
-  createBuyerAccount, 
+const {
+  getBuyerAccounts,
+  createBuyerAccount,
+  updateBuyerAccount,
   deleteBuyerAccount,
   getEmailLogs,
   createEmailLog,
@@ -16,6 +17,7 @@ router.route('/accounts')
   .post(createBuyerAccount);
 
 router.route('/accounts/:id')
+  .put(updateBuyerAccount)
   .delete(deleteBuyerAccount);
 
 // Log routes

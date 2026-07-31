@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
-import { Mail, Plus, Loader2, Trash2, CheckCircle, AlertCircle, Eye, EyeOff, Copy, KeyRound } from 'lucide-react';
+import { Mail, Plus, Loader2, Trash2, Pencil, CheckCircle, AlertCircle, Eye, EyeOff, Copy, KeyRound } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Emails() {
@@ -12,6 +12,7 @@ export default function Emails() {
   const [revealedIds, setRevealedIds] = useState(new Set());
 
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState(null);
   const [accountForm, setAccountForm] = useState({ email: '', label: '', password: '' });
 
   const [showLogModal, setShowLogModal] = useState(false);
@@ -43,17 +44,35 @@ export default function Emails() {
     }
   };
 
-  const handleCreateAccount = async (e) => {
+  const openCreateAccount = () => {
+    setEditingAccount(null);
+    setAccountForm({ email: '', label: '', password: '' });
+    setShowAccountModal(true);
+  };
+
+  const openEditAccount = (account) => {
+    setEditingAccount(account);
+    setAccountForm({ email: account.email || '', label: account.label || '', password: account.password || '' });
+    setShowAccountModal(true);
+  };
+
+  const handleSubmitAccount = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/emails/accounts', accountForm);
-      toast.success('Compte ajouté avec succès.');
+      if (editingAccount) {
+        await api.put(`/emails/accounts/${editingAccount._id}`, accountForm);
+        toast.success('Compte mis à jour.');
+      } else {
+        await api.post('/emails/accounts', accountForm);
+        toast.success('Compte ajouté avec succès.');
+      }
       setShowAccountModal(false);
+      setEditingAccount(null);
       setAccountForm({ email: '', label: '', password: '' });
       fetchData();
     } catch {
-      toast.error('Erreur lors de l\'ajout du compte.');
+      toast.error(editingAccount ? 'Erreur lors de la mise à jour du compte.' : 'Erreur lors de l\'ajout du compte.');
     } finally {
       setSaving(false);
     }
@@ -165,7 +184,7 @@ export default function Emails() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Comptes Acheteurs</h2>
               <button
-                onClick={() => setShowAccountModal(true)}
+                onClick={openCreateAccount}
                 className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-400 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
               >
                 <Plus size={16} /> Ajouter
@@ -209,18 +228,27 @@ export default function Emails() {
                         </div>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteAccount(account)}
-                      disabled={deletingAccountId === account._id}
-                      className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 shrink-0"
-                      title="Supprimer ce compte"
-                    >
-                      {deletingAccountId === account._id ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={15} />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                      <button
+                        onClick={() => openEditAccount(account)}
+                        className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                        title="Modifier ce compte"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAccount(account)}
+                        disabled={deletingAccountId === account._id}
+                        className="text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                        title="Supprimer ce compte"
+                      >
+                        {deletingAccountId === account._id ? (
+                          <Loader2 size={15} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -335,8 +363,8 @@ export default function Emails() {
       {showAccountModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-2xl font-bold mb-6">Ajouter un compte</h2>
-            <form onSubmit={handleCreateAccount} className="space-y-4">
+            <h2 className="text-2xl font-bold mb-6">{editingAccount ? 'Modifier le compte' : 'Ajouter un compte'}</h2>
+            <form onSubmit={handleSubmitAccount} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Libellé (ex: Shein FR) *</label>
                 <input
@@ -371,7 +399,7 @@ export default function Emails() {
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   type="button"
-                  onClick={() => { setShowAccountModal(false); setAccountForm({ email: '', label: '', password: '' }); }}
+                  onClick={() => { setShowAccountModal(false); setEditingAccount(null); setAccountForm({ email: '', label: '', password: '' }); }}
                   className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   Annuler
