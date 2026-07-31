@@ -217,7 +217,7 @@ export default function Credentials() {
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <Truck size={18} className="text-indigo-500" /> {t.name}
                     </h3>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEditTransporteur(t)}
                         className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
@@ -272,7 +272,7 @@ export default function Credentials() {
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <MapPin size={18} className="text-indigo-500" /> {l.name}
                     </h3>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEditLocation(l)}
                         className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"

@@ -186,7 +186,7 @@ export default function WinningProducts() {
             >
               <div className="relative h-44 bg-slate-100 dark:bg-slate-800">
                 <img src={item.screenshot} alt={item.description} className="w-full h-full object-cover" />
-                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => openEdit(item)}
                     className="bg-white/90 dark:bg-slate-900/90 text-slate-600 hover:text-indigo-600 p-1.5 rounded-md shadow-sm"

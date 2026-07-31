@@ -228,7 +228,7 @@ export default function Emails() {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shrink-0">
                       <button
                         onClick={() => openEditAccount(account)}
                         className="text-slate-400 hover:text-indigo-600 transition-colors p-1.5 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
@@ -320,7 +320,7 @@ export default function Emails() {
                         <button
                           onClick={() => handleDeleteLog(log)}
                           disabled={deletingLogId === log._id}
-                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
                           title="Supprimer ce log"
                         >
                           {deletingLogId === log._id ? (

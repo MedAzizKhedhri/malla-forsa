@@ -702,7 +702,7 @@ export default function Clients() {
                         <button
                           onClick={(e) => handleDeleteOrder(order._id, e)}
                           disabled={deletingOrderId === order._id}
-                          className="absolute right-2 top-8 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity p-1.5 rounded-md"
+                          className="absolute right-2 top-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity p-1.5 rounded-md"
                           title="Supprimer la commande"
                         >
                           {deletingOrderId === order._id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
