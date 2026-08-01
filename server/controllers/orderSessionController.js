@@ -87,6 +87,19 @@ exports.updateOrderSession = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!session) return res.status(404).json({ message: 'OrderSession not found' });
+
+    // If the admin raised "Nombre de colis" while editing an existing panier,
+    // auto-create the additional blank colis so they show up ready to fill in
+    // on the Colis page — mirrors what already happens on create.
+    if (req.body.nombreColis !== undefined) {
+      const existingCount = await Colis.countDocuments({ panier: session._id, isDeleted: false });
+      const target = Number(session.nombreColis) || 0;
+      if (target > existingCount) {
+        const colisToCreate = Array.from({ length: target - existingCount }, () => ({ panier: session._id }));
+        await Colis.insertMany(colisToCreate);
+      }
+    }
+
     res.json(session);
   } catch (error) {
     res.status(400).json({ message: error.message });
