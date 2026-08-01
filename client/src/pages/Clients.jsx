@@ -7,6 +7,7 @@ import {
   CreditCard, AlertTriangle, CheckCircle2, Link2, Unlink, ImageIcon, Star
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Lightbox from '../components/Lightbox';
 
 const emptyForm = { name: '', phone: '', contactInfo: '', nombreArticles: '', compteAcheteur: '' };
 const emptyOrderForm = { name: '', panier: '', nombreArticles: '', estimatedAmountEur: '', estimatedAmountTnd: '', insuranceFee: '', screenshots: [] };
@@ -35,6 +36,7 @@ export default function Clients() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   // New/edit order (ClientPanier) modal
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -768,7 +770,12 @@ export default function Clients() {
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                           {selectedOrder.screenshots.map((url) => (
                             <div key={url} className="relative h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                              <img src={url} alt="Capture" className="w-full h-full object-cover" />
+                              <img
+                                src={url}
+                                alt="Capture"
+                                className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => setLightboxSrc(url)}
+                              />
                               <button
                                 type="button"
                                 onClick={() => handleRemoveDetailScreenshot(url)}
@@ -1049,7 +1056,12 @@ export default function Clients() {
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   {orderForm.screenshots.map((url) => (
                     <div key={url} className="relative h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                      <img src={url} alt="Capture" className="w-full h-full object-cover" />
+                      <img
+                        src={url}
+                        alt="Capture"
+                        className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setLightboxSrc(url)}
+                      />
                       <button
                         type="button"
                         onClick={() => removeOrderFormScreenshot(url)}
@@ -1254,6 +1266,8 @@ export default function Clients() {
           </div>
         </div>
       )}
+
+      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </div>
   );
 }

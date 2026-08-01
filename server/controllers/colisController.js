@@ -2,11 +2,12 @@ const Colis = require('../models/Colis');
 
 exports.getColis = async (req, res) => {
   try {
-    const filters = {};
+    const filters = { isDeleted: false };
     if (req.query.panier) filters.panier = req.query.panier;
 
     const colisList = await Colis.find(filters)
       .populate('panier', 'name')
+      .populate('clients', 'name')
       .sort({ createdAt: -1 });
 
     res.json(colisList);
@@ -17,7 +18,9 @@ exports.getColis = async (req, res) => {
 
 exports.getColisById = async (req, res) => {
   try {
-    const colis = await Colis.findById(req.params.id).populate('panier', 'name');
+    const colis = await Colis.findOne({ _id: req.params.id, isDeleted: false })
+      .populate('panier', 'name')
+      .populate('clients', 'name');
     if (!colis) return res.status(404).json({ message: 'Colis not found' });
     res.json(colis);
   } catch (error) {
@@ -37,11 +40,11 @@ exports.createColis = async (req, res) => {
 
 exports.updateColis = async (req, res) => {
   try {
-    const colis = await Colis.findByIdAndUpdate(
-      req.params.id,
+    const colis = await Colis.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: false },
       req.body,
       { new: true, runValidators: true }
-    ).populate('panier', 'name');
+    ).populate('panier', 'name').populate('clients', 'name');
     if (!colis) return res.status(404).json({ message: 'Colis not found' });
     res.json(colis);
   } catch (error) {
@@ -51,7 +54,11 @@ exports.updateColis = async (req, res) => {
 
 exports.deleteColis = async (req, res) => {
   try {
-    const colis = await Colis.findByIdAndDelete(req.params.id);
+    const colis = await Colis.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: false },
+      { isDeleted: true },
+      { new: true }
+    );
     if (!colis) return res.status(404).json({ message: 'Colis not found' });
     res.json({ message: 'Colis removed' });
   } catch (error) {

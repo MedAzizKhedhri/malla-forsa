@@ -4,6 +4,7 @@ import { useAppToast } from '../components/ToastProvider';
 import { Plus, Loader2, Trash2, Edit, ImageIcon, X, Tag } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
+import Lightbox from '../components/Lightbox';
 
 const emptyForm = { screenshot: '', description: '', tags: '' };
 
@@ -23,6 +24,7 @@ export default function WinningProducts() {
 
   const [deletingId, setDeletingId] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   useEffect(() => {
     // Unfiltered fetch once, to build the full tag vocabulary for the filter chips
@@ -185,7 +187,12 @@ export default function WinningProducts() {
               className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden hover:shadow-md transition-all group"
             >
               <div className="relative h-44 bg-slate-100 dark:bg-slate-800">
-                <img src={item.screenshot} alt={item.description} className="w-full h-full object-cover" />
+                <img
+                  src={item.screenshot}
+                  alt={item.description}
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setLightboxSrc(item.screenshot)}
+                />
                 <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => openEdit(item)}
@@ -297,6 +304,8 @@ export default function WinningProducts() {
         title="Supprimer ce produit ?"
         message="Ce produit sera retiré du tableau d'inspiration."
       />
+
+      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </div>
   );
 }

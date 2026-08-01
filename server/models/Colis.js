@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const colisSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    trim: true,
+    default: () => `Colis ${new Date().toLocaleDateString('fr-FR')}`,
+  },
   trackingNumber: {
     type: String,
     unique: true,
@@ -19,6 +24,14 @@ const colisSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'OrderSession',
   },
+  clients: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Client' }],
+    default: [],
+  },
+  screenshots: {
+    type: [String],
+    default: [],
+  },
   nombreArticles: {
     type: Number,
     default: 0,
@@ -33,6 +46,10 @@ const colisSchema = new mongoose.Schema({
   },
   notes: {
     type: String,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
   },
 }, {
   timestamps: true,

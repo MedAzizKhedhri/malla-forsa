@@ -11,6 +11,9 @@ exports.getTransporteurs = async (req, res) => {
 
 exports.createTransporteur = async (req, res) => {
   try {
+    if (req.body.isDefault) {
+      await Transporteur.updateMany({}, { isDefault: false });
+    }
     const transporteur = new Transporteur(req.body);
     const saved = await transporteur.save();
     res.status(201).json(saved);
@@ -21,6 +24,9 @@ exports.createTransporteur = async (req, res) => {
 
 exports.updateTransporteur = async (req, res) => {
   try {
+    if (req.body.isDefault) {
+      await Transporteur.updateMany({ _id: { $ne: req.params.id } }, { isDefault: false });
+    }
     const transporteur = await Transporteur.findByIdAndUpdate(
       req.params.id,
       req.body,

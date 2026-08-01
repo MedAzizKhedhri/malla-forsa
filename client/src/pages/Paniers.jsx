@@ -3,12 +3,14 @@ import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
 import {
   ShoppingCart, Plus, Loader2, Trash2, Pencil, ArrowLeft, ImageIcon, X,
-  Package, Users, Wallet, ChevronDown, Calendar, UserPlus
+  Package, Users, Wallet, ChevronDown, Calendar, UserPlus, Gift
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Lightbox from '../components/Lightbox';
+import CheckboxMultiSelect from '../components/CheckboxMultiSelect';
 
 const emptyForm = {
-  name: '', compteAcheteur: '', nombreArticles: '', nombreColis: '', totalPrice: '', screenshots: []
+  name: '', compteAcheteur: '', nombreArticles: '', nombreColis: '', totalPrice: '', devise: 'EUR', arrivage: '', carteCadeauUtilisee: '', screenshots: []
 };
 
 const COLIS_STATUSES = ['Pending', 'In Transit', 'Arrived at Carrier', 'Picked Up', 'In Stock'];
@@ -19,6 +21,7 @@ export default function Paniers() {
   const [loading, setLoading] = useState(true);
   const [buyerAccounts, setBuyerAccounts] = useState([]);
   const [clients, setClients] = useState([]);
+  const [carteCadeaux, setCarteCadeaux] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingPanier, setEditingPanier] = useState(null);
@@ -35,13 +38,15 @@ export default function Paniers() {
   const [trackingDrafts, setTrackingDrafts] = useState({});
 
   const [showAttachModal, setShowAttachModal] = useState(false);
-  const [attachClientId, setAttachClientId] = useState('');
+  const [attachClientIds, setAttachClientIds] = useState([]);
   const [attaching, setAttaching] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   useEffect(() => {
     fetchPaniers();
     api.get('/emails/accounts').then(res => setBuyerAccounts(res.data)).catch(() => {});
     api.get('/clients').then(res => setClients(res.data)).catch(() => {});
+    api.get('/carte-cadeaux').then(res => setCarteCadeaux(res.data)).catch(() => {});
   }, []);
 
   const fetchPaniers = async () => {
@@ -90,6 +95,9 @@ export default function Paniers() {
       nombreArticles: panier.nombreArticles ?? '',
       nombreColis: panier.nombreColis ?? '',
       totalPrice: panier.totalPrice ?? '',
+      devise: panier.devise || 'EUR',
+      arrivage: panier.arrivage || '',
+      carteCadeauUtilisee: panier.carteCadeauUtilisee?._id || panier.carteCadeauUtilisee || '',
       screenshots: panier.screenshots || [],
     });
     setShowModal(true);
@@ -130,6 +138,9 @@ export default function Paniers() {
       nombreArticles: Number(form.nombreArticles) || 0,
       nombreColis: Number(form.nombreColis) || 0,
       totalPrice: Number(form.totalPrice) || 0,
+      devise: form.devise,
+      arrivage: form.arrivage,
+      carteCadeauUtilisee: form.carteCadeauUtilisee || (editingPanier ? null : undefined),
       screenshots: form.screenshots,
     };
     try {
@@ -198,25 +209,32 @@ export default function Paniers() {
   };
 
   const openAttachModal = () => {
-    setAttachClientId('');
+    setAttachClientIds([]);
     setShowAttachModal(true);
   };
 
   const handleAttachClient = async (e) => {
     e.preventDefault();
-    if (!attachClientId) return;
+    if (attachClientIds.length === 0) return;
     setAttaching(true);
     try {
-      await api.post('/client-paniers', {
-        client: attachClientId,
-        panier: selectedPanier._id,
-      });
-      toast.success('Client rattaché au panier.');
+      const results = await Promise.allSettled(
+        attachClientIds.map(clientId => api.post('/client-paniers', {
+          client: clientId,
+          panier: selectedPanier._id,
+        }))
+      );
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failureCount = results.length - successCount;
+      if (successCount > 0) {
+        toast.success(`${successCount} client${successCount !== 1 ? 's' : ''} rattaché${successCount !== 1 ? 's' : ''} au panier.`);
+      }
+      if (failureCount > 0) {
+        toast.error(`Échec du rattachement pour ${failureCount} client${failureCount !== 1 ? 's' : ''}.`);
+      }
       setShowAttachModal(false);
       fetchPanierDetails(selectedPanier._id);
       fetchPaniers();
-    } catch {
-      toast.error('Erreur lors du rattachement du client.');
     } finally {
       setAttaching(false);
     }
@@ -290,9 +308,19 @@ export default function Paniers() {
                   <span className="font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                     {(panier.clients || []).length} client{(panier.clients || []).length !== 1 ? 's' : ''}
                   </span>
+                  {panier.arrivage && (
+                    <span className="font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                      {panier.arrivage}
+                    </span>
+                  )}
+                  {panier.carteCadeauUtilisee && (
+                    <span className="font-medium px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-400 inline-flex items-center gap-1">
+                      <Gift size={11} /> {panier.carteCadeauUtilisee.numero}
+                    </span>
+                  )}
                 </div>
                 <div className="space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
-                  <p className="flex items-center gap-2"><Wallet size={14} className="text-slate-400" /> {(panier.totalPrice || 0).toLocaleString()} €</p>
+                  <p className="flex items-center gap-2"><Wallet size={14} className="text-slate-400" /> {(panier.totalPrice || 0).toLocaleString()} {panier.devise || 'EUR'}</p>
                   {(panier.clients || []).length > 0 && (
                     <p className="flex items-center gap-2 truncate"><Users size={14} className="text-slate-400 shrink-0" /> {panier.clients.map(c => c.name).join(', ')}</p>
                   )}
@@ -350,7 +378,10 @@ export default function Paniers() {
                   <div className="flex justify-between text-sm"><span className="text-slate-500">Articles</span><span className="font-semibold">{panierDetails.nombreArticles || 0}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-slate-500">Colis</span><span className="font-semibold">{panierDetails.nombreColis || 0}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-slate-500">Clients</span><span className="font-semibold">{(panierDetails.clientPaniers || []).length}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-slate-500">Prix total</span><span className="font-semibold">{(panierDetails.totalPrice || 0).toLocaleString()} €</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-slate-500">Prix total</span><span className="font-semibold">{(panierDetails.totalPrice || 0).toLocaleString()} {panierDetails.devise || 'EUR'}</span></div>
+                  {panierDetails.arrivage && (
+                    <div className="flex justify-between text-sm"><span className="text-slate-500">Arrivage</span><span className="font-semibold">{panierDetails.arrivage}</span></div>
+                  )}
                   {panierDetails.compteAcheteur?.label && (
                     <div className="flex justify-between text-sm gap-2">
                       <span className="text-slate-500 shrink-0">Compte acheteur</span>
@@ -359,6 +390,17 @@ export default function Paniers() {
                         {panierDetails.compteAcheteur.email && (
                           <span className="block text-xs font-normal text-slate-400">{panierDetails.compteAcheteur.email}</span>
                         )}
+                      </span>
+                    </div>
+                  )}
+                  {panierDetails.carteCadeauUtilisee && (
+                    <div className="flex justify-between text-sm gap-2">
+                      <span className="text-slate-500 shrink-0 flex items-center gap-1"><Gift size={13} /> Carte cadeau</span>
+                      <span className="font-semibold text-right">
+                        {panierDetails.carteCadeauUtilisee.numero}
+                        <span className="block text-xs font-normal text-slate-400">
+                          {panierDetails.carteCadeauUtilisee.montant} {panierDetails.carteCadeauUtilisee.devise || 'EUR'}
+                        </span>
                       </span>
                     </div>
                   )}
@@ -398,7 +440,13 @@ export default function Paniers() {
                     <h3 className="font-bold text-lg mb-3">Captures d'écran</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {panierDetails.screenshots.map((url, i) => (
-                        <img key={i} src={url} alt="Capture" className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800" />
+                        <img
+                          key={i}
+                          src={url}
+                          alt="Capture"
+                          className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setLightboxSrc(url)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -479,6 +527,17 @@ export default function Paniers() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-1">Arrivage (optionnel)</label>
+                <input
+                  type="text"
+                  placeholder="ex: Arrivage 12 Mars"
+                  value={form.arrivage}
+                  onChange={(e) => setForm({ ...form, arrivage: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-1">Compte acheteur</label>
                 <select
                   value={form.compteAcheteur}
@@ -515,16 +574,43 @@ export default function Paniers() {
                 </div>
               </div>
 
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Prix total</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={form.totalPrice}
+                    onChange={(e) => setForm({ ...form, totalPrice: e.target.value })}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Devise</label>
+                  <select
+                    value={form.devise}
+                    onChange={(e) => setForm({ ...form, devise: e.target.value })}
+                    className="rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="EUR" className="dark:bg-slate-800">EUR</option>
+                    <option value="USD" className="dark:bg-slate-800">USD</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium mb-1">Prix total (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.totalPrice}
-                  onChange={(e) => setForm({ ...form, totalPrice: e.target.value })}
+                <label className="block text-sm font-medium mb-1">Carte cadeau utilisée (optionnel)</label>
+                <select
+                  value={form.carteCadeauUtilisee}
+                  onChange={(e) => setForm({ ...form, carteCadeauUtilisee: e.target.value })}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                >
+                  <option value="" className="dark:bg-slate-800">Aucune — paiement cash uniquement</option>
+                  {carteCadeaux.map(c => (
+                    <option key={c._id} value={c._id} className="dark:bg-slate-800">{c.numero} — {c.montant} {c.devise || 'EUR'}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -532,7 +618,12 @@ export default function Paniers() {
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   {form.screenshots.map((url) => (
                     <div key={url} className="relative h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                      <img src={url} alt="Capture" className="w-full h-full object-cover" />
+                      <img
+                        src={url}
+                        alt="Capture"
+                        className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setLightboxSrc(url)}
+                      />
                       <button
                         type="button"
                         onClick={() => removeScreenshot(url)}
@@ -584,24 +675,19 @@ export default function Paniers() {
       {showAttachModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-2xl font-bold mb-6">Rattacher un Client</h2>
+            <h2 className="text-2xl font-bold mb-6">Rattacher des Clients</h2>
             <form onSubmit={handleAttachClient} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Client *</label>
-                <select
-                  required
-                  value={attachClientId}
-                  onChange={(e) => setAttachClientId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="" className="dark:bg-slate-800">Sélectionner un client</option>
-                  {clients
-                    .filter(c => !(panierDetails?.clientPaniers || []).some(cp => cp.client?._id === c._id))
-                    .map(c => (
-                      <option key={c._id} value={c._id} className="dark:bg-slate-800">{c.name}</option>
-                    ))}
-                </select>
-                <p className="text-xs text-slate-500 mt-1.5">Crée une commande vide pour ce client, déjà rattachée à ce panier — les tarifs et paiements se gèrent ensuite depuis la fiche du client.</p>
+                <label className="block text-sm font-medium mb-1">Clients *</label>
+                <CheckboxMultiSelect
+                  options={clients.filter(c => !(panierDetails?.clientPaniers || []).some(cp => cp.client?._id === c._id))}
+                  selectedIds={attachClientIds}
+                  onChange={setAttachClientIds}
+                  getId={c => c._id}
+                  getLabel={c => c.name}
+                  emptyLabel="Tous les clients sont déjà rattachés à ce panier."
+                />
+                <p className="text-xs text-slate-500 mt-1.5">Crée une commande vide pour chaque client sélectionné, déjà rattachée à ce panier — les tarifs et paiements se gèrent ensuite depuis la fiche du client.</p>
               </div>
               <div className="flex gap-3 justify-end mt-6">
                 <button
@@ -613,17 +699,19 @@ export default function Paniers() {
                 </button>
                 <button
                   type="submit"
-                  disabled={attaching || !attachClientId}
+                  disabled={attaching || attachClientIds.length === 0}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-70"
                 >
                   {attaching && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Rattacher
+                  Rattacher{attachClientIds.length > 0 ? ` (${attachClientIds.length})` : ''}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </div>
   );
 }

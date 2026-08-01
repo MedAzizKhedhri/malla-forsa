@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package, Users, Mail,
   LayoutDashboard, Globe, LogOut, MoreHorizontal, X,
-  ShoppingCart, KeyRound, Gift, Sparkles
+  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp
 } from 'lucide-react';
 
 // Full sidebar navigation (desktop)
@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Paniers', href: '/paniers', icon: ShoppingCart },
   { name: 'Colis', href: '/colis', icon: Package },
+  { name: 'Statistiques', href: '/stats', icon: TrendingUp },
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },
@@ -29,6 +30,7 @@ const primaryTabs = [
 
 // Secondary items accessible via the "Plus" sheet on mobile
 const secondaryItems = [
+  { name: 'Statistiques', href: '/stats', icon: TrendingUp },
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },

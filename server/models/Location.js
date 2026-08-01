@@ -10,6 +10,10 @@ const locationSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  isDefault: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });

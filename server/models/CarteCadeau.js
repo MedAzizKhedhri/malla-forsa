@@ -16,6 +16,11 @@ const carteCadeauSchema = new mongoose.Schema({
     required: [true, 'Le montant est requis'],
     min: [0, 'Le montant ne peut pas être négatif'],
   },
+  devise: {
+    type: String,
+    enum: ['EUR', 'USD'],
+    default: 'EUR',
+  },
   isDeleted: {
     type: Boolean,
     default: false,

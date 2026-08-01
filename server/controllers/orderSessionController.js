@@ -1,11 +1,13 @@
 const OrderSession = require('../models/OrderSession');
 const Colis = require('../models/Colis');
 const ClientPanier = require('../models/ClientPanier');
+const { getRate } = require('../utils/fxRate');
 
 exports.getOrderSessions = async (req, res) => {
   try {
     const sessions = await OrderSession.find()
       .populate('compteAcheteur', 'label email')
+      .populate('carteCadeauUtilisee', 'numero code montant devise')
       .sort({ createdAt: -1 });
 
     // Attach a lightweight client count per panier so the list view can show
@@ -33,7 +35,8 @@ exports.getOrderSessions = async (req, res) => {
 exports.getOrderSessionById = async (req, res) => {
   try {
     const session = await OrderSession.findById(req.params.id)
-      .populate('compteAcheteur', 'label email');
+      .populate('compteAcheteur', 'label email')
+      .populate('carteCadeauUtilisee', 'numero code montant devise');
     if (!session) return res.status(404).json({ message: 'OrderSession not found' });
 
     const colis = await Colis.find({ panier: session._id }).sort({ createdAt: 1 });
@@ -50,6 +53,17 @@ exports.getOrderSessionById = async (req, res) => {
 exports.createOrderSession = async (req, res) => {
   try {
     const session = new OrderSession(req.body);
+
+    // Stamp the exchange rate at creation time so historical profit stays
+    // stable even as the live rate moves later (never re-stamped on update).
+    if (!session.exchangeRateToTnd) {
+      try {
+        session.exchangeRateToTnd = await getRate(session.devise || 'EUR');
+      } catch (rateError) {
+        return res.status(503).json({ message: `Impossible de récupérer le taux de change, réessayez. (${rateError.message})` });
+      }
+    }
+
     const savedSession = await session.save();
 
     // Auto-create the panier's colis, blank and ready for the broker to fill in later

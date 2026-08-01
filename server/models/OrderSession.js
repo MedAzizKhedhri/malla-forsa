@@ -28,6 +28,26 @@ const orderSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  devise: {
+    type: String,
+    enum: ['EUR', 'USD'],
+    default: 'EUR',
+  },
+  arrivage: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  // Rate (1 unit of `devise` -> TND) captured at creation time, so historical
+  // profit stays stable even as the live rate moves later.
+  exchangeRateToTnd: {
+    type: Number,
+  },
+  // Optional: a carte cadeau used (alongside or instead of cash) to pay for this panier.
+  carteCadeauUtilisee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CarteCadeau',
+  },
   status: {
     type: String,
     enum: ['Open', 'Ordered', 'Closed'],

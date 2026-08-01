@@ -36,6 +36,7 @@ app.use('/api/locations', protect, require('./routes/locationRoutes'));
 app.use('/api/transporteurs', protect, require('./routes/transporteurRoutes'));
 app.use('/api/carte-cadeaux', protect, require('./routes/carteCadeauRoutes'));
 app.use('/api/winning-products', protect, require('./routes/winningProductRoutes'));
+app.use('/api/stats', protect, require('./routes/statsRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {

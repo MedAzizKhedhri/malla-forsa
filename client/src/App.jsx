@@ -12,6 +12,7 @@ import Paniers from './pages/Paniers';
 import Credentials from './pages/Credentials';
 import CarteCadeaux from './pages/CarteCadeaux';
 import WinningProducts from './pages/WinningProducts';
+import Stats from './pages/Stats';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('malla_token');
@@ -40,6 +41,7 @@ function App() {
           <Route path="/credentials" element={<ProtectedRoute><Credentials /></ProtectedRoute>} />
           <Route path="/carte-cadeaux" element={<ProtectedRoute><CarteCadeaux /></ProtectedRoute>} />
           <Route path="/produits-gagnants" element={<ProtectedRoute><WinningProducts /></ProtectedRoute>} />
+          <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
-import { Gift, KeyRound, Coins, Plus, Loader2, Trash2, Edit, Search } from 'lucide-react';
+import { Gift, KeyRound, Coins, Plus, Loader2, Trash2, Edit, Search, ShoppingCart } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
 
-const emptyForm = { numero: '', code: '', montant: '' };
+const emptyForm = { numero: '', code: '', montant: '', devise: 'EUR' };
 
 export default function CarteCadeaux() {
   const toast = useAppToast();
@@ -13,6 +13,7 @@ export default function CarteCadeaux() {
   const [cartes, setCartes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [paniersByCarte, setPaniersByCarte] = useState({});
 
   const [showModal, setShowModal] = useState(false);
   const [editingCarte, setEditingCarte] = useState(null);
@@ -24,6 +25,16 @@ export default function CarteCadeaux() {
 
   useEffect(() => {
     fetchCartes();
+    api.get('/order-sessions').then(res => {
+      const byCarte = {};
+      res.data.forEach((p) => {
+        const carteId = p.carteCadeauUtilisee?._id || p.carteCadeauUtilisee;
+        if (!carteId) return;
+        if (!byCarte[carteId]) byCarte[carteId] = [];
+        byCarte[carteId].push(p.name);
+      });
+      setPaniersByCarte(byCarte);
+    }).catch(() => {});
   }, []);
 
   const fetchCartes = async () => {
@@ -53,7 +64,7 @@ export default function CarteCadeaux() {
 
   const openEdit = (carte) => {
     setEditingCarte(carte);
-    setFormData({ numero: carte.numero, code: carte.code, montant: carte.montant });
+    setFormData({ numero: carte.numero, code: carte.code, montant: carte.montant, devise: carte.devise || 'EUR' });
     setShowModal(true);
   };
 
@@ -71,6 +82,7 @@ export default function CarteCadeaux() {
         numero: formData.numero,
         code: formData.code,
         montant: Number(formData.montant) || 0,
+        devise: formData.devise,
       };
       if (editingCarte) {
         await api.put(`/carte-cadeaux/${editingCarte._id}`, payload);
@@ -177,8 +189,20 @@ export default function CarteCadeaux() {
                   <KeyRound size={16} className="text-slate-400" /> {carte.code}
                 </p>
                 <p className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-base pt-1">
-                  <Coins size={16} className="text-emerald-500" /> {carte.montant.toLocaleString()} TND
+                  <Coins size={16} className="text-emerald-500" /> {carte.montant.toLocaleString()} {carte.devise || 'EUR'}
                 </p>
+                {paniersByCarte[carte._id]?.length > 0 ? (
+                  <p className="flex items-start gap-2 text-xs pt-1">
+                    <ShoppingCart size={14} className="text-purple-400 shrink-0 mt-0.5" />
+                    <span className="text-purple-700 dark:text-purple-400 font-medium">
+                      Utilisée dans : {paniersByCarte[carte._id].join(', ')}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="flex items-center gap-2 text-xs text-slate-400 pt-1">
+                    <ShoppingCart size={14} className="text-slate-300 dark:text-slate-600" /> Non utilisée
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -210,17 +234,30 @@ export default function CarteCadeaux() {
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Montant (TND) *</label>
-            <input
-              required
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.montant}
-              onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1">Montant *</label>
+              <input
+                required
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.montant}
+                onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Devise</label>
+              <select
+                value={formData.devise}
+                onChange={(e) => setFormData({ ...formData, devise: e.target.value })}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="EUR" className="dark:bg-slate-800">EUR</option>
+                <option value="USD" className="dark:bg-slate-800">USD</option>
+              </select>
+            </div>
           </div>
           <div className="flex gap-3 justify-end mt-6">
             <button

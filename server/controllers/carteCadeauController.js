@@ -15,8 +15,8 @@ exports.getCarteCadeaux = async (req, res) => {
 // @route   POST /api/carte-cadeaux
 exports.createCarteCadeau = async (req, res) => {
   try {
-    const { numero, code, montant } = req.body;
-    const carte = new CarteCadeau({ numero, code, montant });
+    const { numero, code, montant, devise } = req.body;
+    const carte = new CarteCadeau({ numero, code, montant, devise });
     const saved = await carte.save();
     res.status(201).json(saved);
   } catch (error) {
@@ -28,10 +28,10 @@ exports.createCarteCadeau = async (req, res) => {
 // @route   PUT /api/carte-cadeaux/:id
 exports.updateCarteCadeau = async (req, res) => {
   try {
-    const { numero, code, montant } = req.body;
+    const { numero, code, montant, devise } = req.body;
     const carte = await CarteCadeau.findOneAndUpdate(
       { _id: req.params.id, isDeleted: false },
-      { numero, code, montant },
+      { numero, code, montant, devise },
       { new: true, runValidators: true }
     );
     if (!carte) return res.status(404).json({ message: 'Carte cadeau introuvable' });

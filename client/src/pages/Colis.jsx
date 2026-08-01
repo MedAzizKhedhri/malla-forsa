@@ -3,13 +3,15 @@ import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
 import {
   Package, Plus, Loader2, Truck, Calendar, Trash2, ChevronDown,
-  ArrowLeft, MapPin, ShoppingCart, ShoppingBag
+  ArrowLeft, MapPin, ShoppingCart, ShoppingBag, ImageIcon, X, User
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
+import Lightbox from '../components/Lightbox';
+import CheckboxMultiSelect from '../components/CheckboxMultiSelect';
 
 const COLIS_STATUSES = ['Pending', 'In Transit', 'Arrived at Carrier', 'Picked Up', 'In Stock'];
 
-const emptyForm = { trackingNumber: '', carrier: '', location: '', nombreArticles: '', status: 'Pending', notes: '', arrivalDate: '' };
+const emptyForm = { name: '', trackingNumber: '', carrier: '', location: '', clients: [], panier: '', nombreArticles: '', status: 'Pending', notes: '', arrivalDate: '' };
 
 const statusColor = (status) => {
   const colors = {
@@ -28,6 +30,8 @@ export default function Colis() {
   const [loading, setLoading] = useState(true);
   const [transporteurs, setTransporteurs] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [paniers, setPaniers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -39,12 +43,21 @@ export default function Colis() {
   const [colisDetails, setColisDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [pendingDeleteColis, setPendingDeleteColis] = useState(null);
+  const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [editClientIds, setEditClientIds] = useState([]);
 
   useEffect(() => {
     fetchColis();
     api.get('/transporteurs').then(res => setTransporteurs(res.data)).catch(() => {});
     api.get('/locations').then(res => setLocations(res.data)).catch(() => {});
+    api.get('/clients').then(res => setClients(res.data)).catch(() => {});
+    api.get('/order-sessions').then(res => setPaniers(res.data)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    setEditClientIds((colisDetails?.clients || []).map(c => c._id || c));
+  }, [colisDetails?._id]);
 
   const fetchColis = async () => {
     try {
@@ -74,13 +87,27 @@ export default function Colis() {
     fetchColisDetails(colis._id);
   };
 
+  const openCreateModal = () => {
+    const defaultTransporteur = transporteurs.find(t => t.isDefault);
+    const defaultLocation = locations.find(l => l.isDefault);
+    setFormData({
+      ...emptyForm,
+      carrier: defaultTransporteur?.name || '',
+      location: defaultLocation?.name || '',
+    });
+    setShowModal(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const data = {
         ...formData,
+        name: formData.name || undefined,
         trackingNumber: formData.trackingNumber || undefined,
+        clients: formData.clients,
+        panier: formData.panier || undefined,
         nombreArticles: Number(formData.nombreArticles) || 0,
         arrivalDate: formData.arrivalDate ? new Date(formData.arrivalDate) : undefined
       };
@@ -119,9 +146,11 @@ export default function Colis() {
     e.preventDefault();
     try {
       const res = await api.put(`/colis/${colisDetails._id}`, {
+        name: colisDetails.name,
         trackingNumber: colisDetails.trackingNumber || undefined,
         carrier: colisDetails.carrier,
         location: colisDetails.location,
+        clients: editClientIds,
         nombreArticles: Number(colisDetails.nombreArticles) || 0,
         arrivalDate: colisDetails.arrivalDate ? new Date(colisDetails.arrivalDate) : null,
         notes: colisDetails.notes
@@ -131,6 +160,44 @@ export default function Colis() {
       toast.success('Colis mis à jour.');
     } catch {
       toast.error('Erreur lors de l\'enregistrement.');
+    }
+  };
+
+  const handleScreenshotUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !colisDetails) return;
+    setUploadingScreenshots(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const data = new FormData();
+        data.append('image', file);
+        const res = await api.post('/upload', data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        uploaded.push(res.data);
+      }
+      const screenshots = [...(colisDetails.screenshots || []), ...uploaded];
+      const res = await api.put(`/colis/${colisDetails._id}`, { screenshots });
+      setColisDetails(res.data);
+      fetchColis();
+      toast.success('Capture(s) ajoutée(s).');
+    } catch {
+      toast.error('Erreur lors du téléversement des images.');
+    } finally {
+      setUploadingScreenshots(false);
+    }
+  };
+
+  const handleRemoveScreenshot = async (url) => {
+    if (!colisDetails) return;
+    try {
+      const screenshots = (colisDetails.screenshots || []).filter(s => s !== url);
+      const res = await api.put(`/colis/${colisDetails._id}`, { screenshots });
+      setColisDetails(res.data);
+      fetchColis();
+    } catch {
+      toast.error('Erreur lors de la suppression de la capture.');
     }
   };
 
@@ -169,7 +236,7 @@ export default function Colis() {
         </div>
         {!selectedColis && (
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm font-semibold cursor-pointer"
           >
             <Plus size={18} /> Nouveau Colis
@@ -231,9 +298,17 @@ export default function Colis() {
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold font-mono tracking-tight mb-2 text-slate-800 dark:text-slate-200">
-                  {colis.trackingNumber || <span className="text-slate-400 italic text-base">Sans numéro de suivi</span>}
+                {colis.clients?.length > 0 && (
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-0.5 flex items-center gap-1.5">
+                    <User size={13} className="text-slate-400 shrink-0" /> {colis.clients.map(c => c.name).join(', ')}
+                  </p>
+                )}
+                <h3 className="text-lg font-bold tracking-tight mb-0.5 text-slate-800 dark:text-slate-200">
+                  {colis.name}
                 </h3>
+                <p className="text-sm font-mono text-slate-500 dark:text-slate-400 mb-2">
+                  {colis.trackingNumber || <span className="italic">Sans numéro de suivi</span>}
+                </p>
 
                 {colis.panier?.name && (
                   <div className="mb-2">
@@ -285,19 +360,27 @@ export default function Colis() {
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <div className="text-xs text-slate-500 flex items-center gap-2">
+                <div className="text-xs text-slate-500 flex items-center gap-2 flex-wrap">
                   Détails de l'Expédition
+                  {colisDetails?.clients?.length > 0 && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 inline-flex items-center gap-1">
+                      <User size={11} /> {colisDetails.clients.map(c => c.name).join(', ')}
+                    </span>
+                  )}
                   {colisDetails?.panier?.name && (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 inline-flex items-center gap-1">
                       <ShoppingCart size={11} /> {colisDetails.panier.name}
                     </span>
                   )}
                 </div>
-                <h2 className="text-2xl font-black font-mono tracking-tight text-slate-800 dark:text-slate-100 mt-0.5">
-                  {(colisDetails ? colisDetails.trackingNumber : selectedColis.trackingNumber) || (
-                    <span className="text-slate-400 italic text-lg font-sans">Sans numéro de suivi</span>
-                  )}
+                <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100 mt-0.5">
+                  {(colisDetails ? colisDetails.name : selectedColis.name)}
                 </h2>
+                <p className="text-sm font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                  {(colisDetails ? colisDetails.trackingNumber : selectedColis.trackingNumber) || (
+                    <span className="italic">Sans numéro de suivi</span>
+                  )}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -334,6 +417,16 @@ export default function Colis() {
             ) : colisDetails ? (
               <form onSubmit={handleUpdateColis} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Nom</label>
+                    <input
+                      type="text"
+                      placeholder="Non renseigné"
+                      value={colisDetails.name || ''}
+                      onChange={(e) => setColisDetails({ ...colisDetails, name: e.target.value })}
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Numéro de suivi</label>
                     <input
@@ -380,6 +473,16 @@ export default function Colis() {
                       ))}
                     </select>
                   </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Clients</label>
+                    <CheckboxMultiSelect
+                      options={clients}
+                      selectedIds={editClientIds}
+                      onChange={setEditClientIds}
+                      getId={c => c._id}
+                      getLabel={c => c.name}
+                    />
+                  </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date d'arrivée estimée/réelle</label>
                     <input
@@ -409,6 +512,38 @@ export default function Colis() {
               </form>
             ) : null}
           </div>
+
+          {/* Screenshots */}
+          {colisDetails && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+              <h3 className="font-bold text-lg">Captures d'écran</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {(colisDetails.screenshots || []).map((url) => (
+                  <div key={url} className="relative h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 group/shot">
+                    <img
+                      src={url}
+                      alt="Capture"
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setLightboxSrc(url)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveScreenshot(url)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover/shot:opacity-100 transition-opacity"
+                      title="Supprimer"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex items-center justify-center gap-1 h-24 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all text-xs text-slate-500 text-center px-2">
+                  {uploadingScreenshots ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <ImageIcon size={16} className="text-slate-400" />}
+                  {uploadingScreenshots ? 'Envoi...' : 'Ajouter'}
+                  <input type="file" accept="image/*" multiple onChange={handleScreenshotUpload} disabled={uploadingScreenshots} className="hidden" />
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -418,6 +553,16 @@ export default function Colis() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-bold mb-6">Nouveau Colis</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nom</label>
+                <input
+                  type="text"
+                  placeholder="ex: Colis Ahmed - lot 3 (généré automatiquement si vide)"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Numéro de Suivi (Tracking)</label>
                 <input
@@ -461,6 +606,29 @@ export default function Colis() {
                   <option value="" className="dark:bg-slate-800">Aucun</option>
                   {locations.map(l => (
                     <option key={l._id} value={l.name} className="dark:bg-slate-800">{l.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Clients</label>
+                <CheckboxMultiSelect
+                  options={clients}
+                  selectedIds={formData.clients}
+                  onChange={(ids) => setFormData({ ...formData, clients: ids })}
+                  getId={c => c._id}
+                  getLabel={c => c.name}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Panier (optionnel — pour rattacher ce colis à un lot existant)</label>
+                <select
+                  value={formData.panier}
+                  onChange={(e) => setFormData({ ...formData, panier: e.target.value })}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="" className="dark:bg-slate-800">Aucun</option>
+                  {paniers.map(p => (
+                    <option key={p._id} value={p._id} className="dark:bg-slate-800">{p.name}</option>
                   ))}
                 </select>
               </div>
@@ -513,6 +681,8 @@ export default function Colis() {
         message={`Supprimer le colis "${pendingDeleteColis?.trackingNumber || ''}" ?`}
         loading={!!deletingId}
       />
+
+      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </div>
   );
 }

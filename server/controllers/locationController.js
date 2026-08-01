@@ -11,6 +11,9 @@ exports.getLocations = async (req, res) => {
 
 exports.createLocation = async (req, res) => {
   try {
+    if (req.body.isDefault) {
+      await Location.updateMany({}, { isDefault: false });
+    }
     const location = new Location(req.body);
     const saved = await location.save();
     res.status(201).json(saved);
@@ -21,6 +24,9 @@ exports.createLocation = async (req, res) => {
 
 exports.updateLocation = async (req, res) => {
   try {
+    if (req.body.isDefault) {
+      await Location.updateMany({ _id: { $ne: req.params.id } }, { isDefault: false });
+    }
     const location = await Location.findByIdAndUpdate(
       req.params.id,
       req.body,

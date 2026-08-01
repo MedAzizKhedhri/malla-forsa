@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
 import {
-  KeyRound, Truck, MapPin, Plus, Loader2, Trash2, Edit, Phone, Route
+  KeyRound, Truck, MapPin, Plus, Loader2, Trash2, Edit, Phone, Route, Star
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const emptyTransporteur = { name: '', phone: '', location: '', route: '' };
-const emptyLocation = { name: '', address: '' };
+const emptyTransporteur = { name: '', phone: '', location: '', route: '', isDefault: false };
+const emptyLocation = { name: '', address: '', isDefault: false };
 
 export default function Credentials() {
   const toast = useAppToast();
@@ -67,7 +67,7 @@ export default function Credentials() {
 
   const openEditTransporteur = (t) => {
     setEditingTransporteur(t);
-    setTransporteurForm({ name: t.name, phone: t.phone || '', location: t.location || '', route: t.route || '' });
+    setTransporteurForm({ name: t.name, phone: t.phone || '', location: t.location || '', route: t.route || '', isDefault: !!t.isDefault });
     setShowTransporteurModal(true);
   };
 
@@ -115,7 +115,7 @@ export default function Credentials() {
 
   const openEditLocation = (l) => {
     setEditingLocation(l);
-    setLocationForm({ name: l.name, address: l.address || '' });
+    setLocationForm({ name: l.name, address: l.address || '', isDefault: !!l.isDefault });
     setShowLocationModal(true);
   };
 
@@ -216,6 +216,11 @@ export default function Credentials() {
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <Truck size={18} className="text-indigo-500" /> {t.name}
+                      {t.isDefault && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 inline-flex items-center gap-1">
+                          <Star size={10} className="fill-current" /> Par défaut
+                        </span>
+                      )}
                     </h3>
                     <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button
@@ -271,6 +276,11 @@ export default function Credentials() {
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-lg font-bold flex items-center gap-2">
                       <MapPin size={18} className="text-indigo-500" /> {l.name}
+                      {l.isDefault && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 inline-flex items-center gap-1">
+                          <Star size={10} className="fill-current" /> Par défaut
+                        </span>
+                      )}
                     </h3>
                     <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button
@@ -342,6 +352,15 @@ export default function Credentials() {
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={transporteurForm.isDefault}
+                  onChange={(e) => setTransporteurForm({ ...transporteurForm, isDefault: e.target.checked })}
+                  className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                />
+                Pré-sélectionné par défaut pour les nouveaux colis
+              </label>
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   type="button"
@@ -391,6 +410,15 @@ export default function Credentials() {
                   rows="3"
                 />
               </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={locationForm.isDefault}
+                  onChange={(e) => setLocationForm({ ...locationForm, isDefault: e.target.checked })}
+                  className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500"
+                />
+                Pré-sélectionné par défaut pour les nouveaux colis
+              </label>
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   type="button"
