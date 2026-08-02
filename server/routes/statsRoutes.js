@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getArrivageStats, getOverviewStats } = require('../controllers/statsController');
+const { getStatsSummary, getFilterOptions } = require('../controllers/statsController');
 
-router.get('/arrivages', getArrivageStats);
-router.get('/overview', getOverviewStats);
+router.get('/summary', getStatsSummary);
+router.get('/filter-options', getFilterOptions);
 
 module.exports = router;

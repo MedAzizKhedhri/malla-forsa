@@ -1,111 +1,71 @@
 const OrderSession = require('../models/OrderSession');
 const ClientPanier = require('../models/ClientPanier');
-const { getRate } = require('../utils/fxRate');
+const Client = require('../models/Client');
 
-// cost = totalPrice (in the panier's own currency) converted to TND using the
-// rate stored on the panier at creation time. Paniers missing a stored rate
-// contribute 0 to cost and mark the group/total as having incomplete data.
-function costOf(session) {
-  if (!session.exchangeRateToTnd) return { cost: 0, incomplete: true };
-  return { cost: (session.totalPrice || 0) * session.exchangeRateToTnd, incomplete: false };
+function buildMatch({ month, arrivage }) {
+  const match = {};
+  if (month) {
+    const [year, m] = month.split('-').map(Number);
+    const start = new Date(year, m - 1, 1);
+    const end = new Date(year, m, 1);
+    match.createdAt = { $gte: start, $lt: end };
+  }
+  if (arrivage) {
+    match.arrivage = arrivage;
+  }
+  return match;
 }
 
-function revenueOf(clientPaniers) {
-  let billedRevenue = 0;
-  let collectedRevenue = 0;
-  clientPaniers.forEach((cp) => {
-    billedRevenue += cp.estimatedAmountTnd || 0;
-    (cp.paymentHistory || []).forEach((p) => { collectedRevenue += p.amount || 0; });
-  });
-  return { billedRevenue, collectedRevenue };
-}
-
-// @desc    Per-arrivage cost/revenue/profit
-// @route   GET /api/stats/arrivages
-exports.getArrivageStats = async (req, res) => {
+// @desc    Somme EUR / Somme USD / nombre de clients / nombre d'articles,
+//          optionally filtered by month and/or arrivage (combinable).
+// @route   GET /api/stats/summary?month=YYYY-MM&arrivage=...
+exports.getStatsSummary = async (req, res) => {
   try {
-    const sessions = await OrderSession.find();
+    const { month, arrivage } = req.query;
+    const match = buildMatch({ month, arrivage });
+    const hasFilter = Boolean(month || arrivage);
 
-    const groups = {};
-    sessions.forEach((s) => {
-      const key = s.arrivage && s.arrivage.trim() ? s.arrivage.trim() : '(Sans arrivage)';
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(s);
-    });
+    const [facet] = await OrderSession.aggregate([
+      { $match: match },
+      {
+        $facet: {
+          byDevise: [{ $group: { _id: '$devise', total: { $sum: '$totalPrice' } } }],
+          totals: [{ $group: { _id: null, nbreArticles: { $sum: '$nombreArticles' }, panierIds: { $push: '$_id' } } }],
+        },
+      },
+    ]);
 
-    const allClientPaniers = await ClientPanier.find({ panier: { $in: sessions.map(s => s._id) } });
-    const clientPaniersByPanier = {};
-    allClientPaniers.forEach((cp) => {
-      const key = String(cp.panier);
-      if (!clientPaniersByPanier[key]) clientPaniersByPanier[key] = [];
-      clientPaniersByPanier[key].push(cp);
-    });
+    const sommeEUR = facet.byDevise.find(d => d._id === 'EUR')?.total || 0;
+    const sommeUSD = facet.byDevise.find(d => d._id === 'USD')?.total || 0;
+    const nbreArticles = facet.totals[0]?.nbreArticles || 0;
+    const panierIds = facet.totals[0]?.panierIds || [];
 
-    const result = Object.entries(groups).map(([arrivage, group]) => {
-      let cost = 0;
-      let incompleteData = false;
-      group.forEach((s) => {
-        const { cost: c, incomplete } = costOf(s);
-        cost += c;
-        if (incomplete) incompleteData = true;
-      });
+    const nbreClients = hasFilter
+      ? (await ClientPanier.distinct('client', { panier: { $in: panierIds } })).length
+      : await Client.countDocuments();
 
-      const groupClientPaniers = group.flatMap((s) => clientPaniersByPanier[String(s._id)] || []);
-      const { billedRevenue, collectedRevenue } = revenueOf(groupClientPaniers);
-
-      return {
-        arrivage,
-        panierCount: group.length,
-        cost,
-        billedRevenue,
-        collectedRevenue,
-        profitBilled: billedRevenue - cost,
-        profitCollected: collectedRevenue - cost,
-        incompleteData,
-      };
-    });
-
-    result.sort((a, b) => a.arrivage.localeCompare(b.arrivage));
-    res.json(result);
+    res.json({ sommeEUR, sommeUSD, nbreClients, nbreArticles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    General cash-flow overview across all paniers
-// @route   GET /api/stats/overview
-exports.getOverviewStats = async (req, res) => {
+// @desc    Available months (with at least one panier) and distinct arrivage
+//          tags, to populate the two Statistiques filters.
+// @route   GET /api/stats/filter-options
+exports.getFilterOptions = async (req, res) => {
   try {
-    const sessions = await OrderSession.find();
-    const clientPaniers = await ClientPanier.find({ panier: { $in: sessions.map(s => s._id) } });
-
-    let totalCost = 0;
-    let incompletePanierCount = 0;
-    sessions.forEach((s) => {
-      const { cost, incomplete } = costOf(s);
-      totalCost += cost;
-      if (incomplete) incompletePanierCount += 1;
-    });
-
-    const { billedRevenue, collectedRevenue } = revenueOf(clientPaniers);
-
-    let currentRates = { EUR: null, USD: null };
-    try {
-      const [eur, usd] = await Promise.all([getRate('EUR'), getRate('USD')]);
-      currentRates = { EUR: eur, USD: usd };
-    } catch {
-      // Leave currentRates as null if the FX API is unreachable and no cache exists yet
-    }
+    const [months, arrivages] = await Promise.all([
+      OrderSession.aggregate([
+        { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } } } },
+        { $sort: { _id: -1 } },
+      ]),
+      OrderSession.distinct('arrivage', { arrivage: { $nin: [null, ''] } }),
+    ]);
 
     res.json({
-      totalCost,
-      totalBilledRevenue: billedRevenue,
-      totalCollectedRevenue: collectedRevenue,
-      totalProfitBilled: billedRevenue - totalCost,
-      totalProfitCollected: collectedRevenue - totalCost,
-      currentRates,
-      panierCount: sessions.length,
-      incompletePanierCount,
+      months: months.map(m => m._id),
+      arrivages: arrivages.sort((a, b) => a.localeCompare(b)),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -74,7 +74,13 @@ export default function Colis() {
     setLoadingDetails(true);
     try {
       const res = await api.get(`/colis/${colisId}`);
-      setColisDetails(res.data);
+      const defaultTransporteur = transporteurs.find(t => t.isDefault);
+      const defaultLocation = locations.find(l => l.isDefault);
+      setColisDetails({
+        ...res.data,
+        carrier: res.data.carrier || defaultTransporteur?.name || '',
+        location: res.data.location || defaultLocation?.name || '',
+      });
     } catch {
       toast.error('Impossible de charger les détails du colis.');
     } finally {
