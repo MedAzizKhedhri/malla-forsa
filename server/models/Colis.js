@@ -8,8 +8,6 @@ const colisSchema = new mongoose.Schema({
   },
   trackingNumber: {
     type: String,
-    unique: true,
-    sparse: true,
     trim: true,
   },
   carrier: {
