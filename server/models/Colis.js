@@ -9,6 +9,7 @@ const colisSchema = new mongoose.Schema({
   trackingNumber: {
     type: String,
     trim: true,
+    maxlength: 50,
   },
   carrier: {
     type: String,

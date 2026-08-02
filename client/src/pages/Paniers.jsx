@@ -472,6 +472,7 @@ export default function Paniers() {
                               placeholder="Numéro de suivi..."
                               value={trackingDrafts[c._id] ?? ''}
                               onChange={(e) => setTrackingDrafts(prev => ({ ...prev, [c._id]: e.target.value }))}
+                              maxLength={50}
                               className="rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-2.5 py-1.5 text-sm font-mono outline-none focus:ring-2 focus:ring-indigo-500 w-44"
                             />
                           </div>
