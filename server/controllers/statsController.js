@@ -40,11 +40,37 @@ exports.getStatsSummary = async (req, res) => {
     const nbreArticles = facet.totals[0]?.nbreArticles || 0;
     const panierIds = facet.totals[0]?.panierIds || [];
 
+    // TND figures come from clients' own commandes (ClientPanier), not the panier
+    // in its buying currency — a commande's due amount is estimatedAmountTnd +
+    // insuranceFee, already paid down by paymentHistory (same math as the Clients page).
+    const clientPanierMatch = hasFilter ? { panier: { $in: panierIds } } : {};
+    const [cpFacet] = await ClientPanier.aggregate([
+      { $match: clientPanierMatch },
+      {
+        $addFields: {
+          dueAmount: { $add: ['$estimatedAmountTnd', '$insuranceFee'] },
+          paidAmount: { $sum: '$paymentHistory.amount' },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          sommeTND: { $sum: '$dueAmount' },
+          payeTND: { $sum: '$paidAmount' },
+          clientIds: { $addToSet: '$client' },
+        },
+      },
+    ]);
+
+    const sommeTND = cpFacet?.sommeTND || 0;
+    const payeTND = cpFacet?.payeTND || 0;
+    const detteTND = sommeTND - payeTND;
+
     const nbreClients = hasFilter
-      ? (await ClientPanier.distinct('client', { panier: { $in: panierIds } })).length
+      ? (cpFacet?.clientIds || []).length
       : await Client.countDocuments();
 
-    res.json({ sommeEUR, sommeUSD, nbreClients, nbreArticles });
+    res.json({ sommeEUR, sommeUSD, nbreClients, nbreArticles, sommeTND, payeTND, detteTND });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

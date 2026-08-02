@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
-import { Coins, Users, ShoppingBag, Loader2 } from 'lucide-react';
+import { Coins, Users, ShoppingBag, Loader2, Wallet, AlertCircle } from 'lucide-react';
 
 function fmt(n) {
   return (n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -95,6 +95,26 @@ export default function Stats() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
             <p className="text-sm text-slate-500 mb-1 flex items-center gap-1.5"><ShoppingBag size={14} className="text-slate-400" /> Nbre d'articles</p>
             <p className="text-2xl font-bold">{summary.nbreArticles}</p>
+          </div>
+        </div>
+      )}
+
+      {!loading && summary && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Montants TND (commandes clients)</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+              <p className="text-sm text-slate-500 mb-1 flex items-center gap-1.5"><Wallet size={14} className="text-slate-400" /> Somme TND</p>
+              <p className="text-2xl font-bold">{fmt(summary.sommeTND)} TND</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+              <p className="text-sm text-slate-500 mb-1 flex items-center gap-1.5"><Coins size={14} className="text-slate-400" /> Payé</p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(summary.payeTND)} TND</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-6">
+              <p className="text-sm text-slate-500 mb-1 flex items-center gap-1.5"><AlertCircle size={14} className="text-slate-400" /> Total dette</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{fmt(summary.detteTND)} TND</p>
+            </div>
           </div>
         </div>
       )}
