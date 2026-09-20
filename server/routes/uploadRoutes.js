@@ -27,7 +27,20 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-router.post('/', protect, upload.single('image'), async (req, res) => {
+// Run multer by hand so its errors (size limit, bad file type) become clear JSON
+// responses and show up in the server logs instead of a bare 500.
+function handleUpload(req, res, next) {
+  upload.single('image')(req, res, (err) => {
+    if (!err) return next();
+    console.error('[upload] rejected:', err.message || err);
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ message: 'Image too large (max 10 MB)' });
+    }
+    return res.status(400).json({ message: typeof err === 'string' ? err : err.message });
+  });
+}
+
+router.post('/', protect, handleUpload, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
@@ -42,6 +55,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
     const publicUrl = `${process.env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`;
     res.send(publicUrl);
   } catch (error) {
+    console.error('[upload] R2 upload failed:', error);
     res.status(500).json({ message: 'Upload failed', error: error.message });
   }
 });
