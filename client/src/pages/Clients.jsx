@@ -898,8 +898,8 @@ export default function Clients() {
 
       {/* CLIENT CREATE / EDIT MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">
               {editingClient ? 'Modifier le Client' : 'Nouveau Client'}
             </h2>
@@ -981,8 +981,8 @@ export default function Clients() {
 
       {/* NEW ORDER (ClientPanier) MODAL */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">Nouvelle Commande</h2>
             <form onSubmit={handleCreateOrder} className="space-y-4">
               <div>
@@ -1102,8 +1102,8 @@ export default function Clients() {
 
       {/* RECORD PAYMENT MODAL */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">Enregistrer un Paiement</h2>
             <form onSubmit={handleAddPayment} className="space-y-4">
               <div>
@@ -1171,8 +1171,8 @@ export default function Clients() {
 
       {/* DETAILED PRINTABLE/SHAREABLE AGREEMENT SUMMARY */}
       {showAgreement && selectedOrder && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white text-slate-900 rounded-3xl w-full max-w-xl shadow-2xl p-8 my-8 relative animate-in fade-in zoom-in-95 duration-250">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white text-slate-900 rounded-3xl w-full max-w-xl shadow-2xl p-8 relative animate-in fade-in zoom-in-95 duration-250 my-auto">
             {/* Close action */}
             <button
               onClick={() => setShowAgreement(false)}

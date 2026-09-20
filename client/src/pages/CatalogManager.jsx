@@ -183,8 +183,8 @@ export default function CatalogManager() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">
               {editingProduct ? 'Modifier le Produit' : 'Ajouter une Offre'}
             </h2>

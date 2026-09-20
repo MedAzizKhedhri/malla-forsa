@@ -511,8 +511,8 @@ export default function Paniers() {
 
       {/* NEW PANIER MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-8">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">{editingPanier ? 'Modifier le Panier' : 'Nouveau Panier'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -674,8 +674,8 @@ export default function Paniers() {
 
       {/* ATTACH CLIENT MODAL */}
       {showAttachModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">Rattacher des Clients</h2>
             <form onSubmit={handleAttachClient} className="space-y-4">
               <div>

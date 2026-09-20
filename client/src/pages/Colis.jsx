@@ -555,8 +555,8 @@ export default function Colis() {
 
       {/* NEW COLIS MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">Nouveau Colis</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -645,7 +645,7 @@ export default function Colis() {
                   type="date"
                   value={formData.arrivalDate}
                   onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full min-w-0 appearance-none rounded-lg border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>

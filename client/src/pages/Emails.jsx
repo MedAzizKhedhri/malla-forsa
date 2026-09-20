@@ -361,8 +361,8 @@ export default function Emails() {
 
       {/* Account Modal */}
       {showAccountModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">{editingAccount ? 'Modifier le compte' : 'Ajouter un compte'}</h2>
             <form onSubmit={handleSubmitAccount} className="space-y-4">
               <div>
@@ -420,8 +420,8 @@ export default function Emails() {
 
       {/* Log Modal */}
       {showLogModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200 my-auto">
             <h2 className="text-2xl font-bold mb-6">Signaler une action (Email)</h2>
             <form onSubmit={handleCreateLog} className="space-y-4">
               <div>
