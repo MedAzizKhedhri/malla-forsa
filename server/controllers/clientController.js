@@ -66,7 +66,7 @@ exports.getClients = async (req, res) => {
     pipeline.push({ $sort: { isPriority: -1, createdAt: -1 } });
 
     const clients = await Client.aggregate(pipeline);
-    await Client.populate(clients, { path: 'compteAcheteur', select: 'label' });
+    await Client.populate(clients, { path: 'compteAcheteur', select: 'label email' });
 
     const enriched = clients.map((client) => {
       const clientPaniers = client.clientPaniers || [];
@@ -93,7 +93,7 @@ exports.getClients = async (req, res) => {
 
 exports.getClientById = async (req, res) => {
   try {
-    const client = await Client.findById(req.params.id).populate('compteAcheteur', 'label');
+    const client = await Client.findById(req.params.id).populate('compteAcheteur', 'label email');
     if (!client) return res.status(404).json({ message: 'Client not found' });
     res.json(client);
   } catch (error) {

@@ -539,6 +539,7 @@ export default function Clients() {
                       {client.compteAcheteur?.label && (
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                           {client.compteAcheteur.label}
+                          {client.compteAcheteur.email && ` — ${client.compteAcheteur.email}`}
                         </span>
                       )}
                     </div>
@@ -952,7 +953,7 @@ export default function Clients() {
                   >
                     <option value="" className="dark:bg-slate-800">Aucun</option>
                     {buyerAccounts.map(a => (
-                      <option key={a._id} value={a._id} className="dark:bg-slate-800">{a.label}</option>
+                      <option key={a._id} value={a._id} className="dark:bg-slate-800">{a.label} — {a.email}</option>
                     ))}
                   </select>
                 </div>

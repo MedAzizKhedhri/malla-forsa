@@ -298,7 +298,9 @@ export default function Emails() {
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="font-bold">{log.subject}</span>
                           <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                            {log.account?.label || 'Compte supprimé'}
+                            {log.account
+                              ? `${log.account.label}${log.account.email ? ` — ${log.account.email}` : ''}`
+                              : 'Compte supprimé'}
                           </span>
                         </div>
                         <p className="text-sm text-slate-600 dark:text-slate-400">{log.snippet}</p>
@@ -434,7 +436,7 @@ export default function Emails() {
                 >
                   <option value="" disabled className="dark:bg-slate-800">Sélectionner</option>
                   {accounts.map((a) => (
-                    <option key={a._id} value={a._id} className="dark:bg-slate-800">{a.label}</option>
+                    <option key={a._id} value={a._id} className="dark:bg-slate-800">{a.label} — {a.email}</option>
                   ))}
                 </select>
               </div>
