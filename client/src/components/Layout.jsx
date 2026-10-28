@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package, Users, Mail,
   LayoutDashboard, Globe, LogOut, MoreHorizontal, X,
-  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp
+  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp, ImageOff
 } from 'lucide-react';
 
 // Full sidebar navigation (desktop)
@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },
+  { name: 'Lost', href: '/lost', icon: ImageOff },
   { name: 'Identifiants', href: '/credentials', icon: KeyRound },
   { name: 'Catalogue Public', href: '/catalog-manager', icon: Globe },
 ];
@@ -34,6 +35,7 @@ const secondaryItems = [
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },
+  { name: 'Lost', href: '/lost', icon: ImageOff },
   { name: 'Identifiants', href: '/credentials', icon: KeyRound },
   { name: 'Catalogue Public', href: '/catalog-manager', icon: Globe },
 ];
