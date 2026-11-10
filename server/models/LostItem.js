@@ -26,6 +26,17 @@ const lostItemSchema = new mongoose.Schema({
     default: '',
     trim: true,
   },
+  // Optional value of the article, in dinars and/or euros
+  priceTnd: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
+  priceEur: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
   isDeleted: {
     type: Boolean,
     default: false,

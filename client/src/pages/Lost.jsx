@@ -115,7 +115,7 @@ export default function Lost() {
 
   // ── Adding photos ────────────────────────────────────────────
   const openAdd = (group = '') => {
-    setAddForm({ cause: tab, transporteur: defaultTransporteur(), group, images: [] });
+    setAddForm({ cause: tab, transporteur: defaultTransporteur(), group, priceTnd: '', priceEur: '', images: [] });
   };
 
   const handleUpload = async (e) => {
@@ -390,10 +390,24 @@ export default function Lost() {
                     >
                       <Check size={14} strokeWidth={3} />
                     </button>
-                    {tab === 'transporteur' && item.transporteur && (
-                      <span className="absolute bottom-2 left-2 max-w-[calc(100%-1rem)] truncate flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/60 text-white">
-                        <Truck size={10} className="shrink-0" /> {item.transporteur}
-                      </span>
+                    {((tab === 'transporteur' && item.transporteur) || item.priceTnd != null || item.priceEur != null) && (
+                      <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1 pointer-events-none">
+                        {tab === 'transporteur' && item.transporteur && (
+                          <span className="max-w-full truncate flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/60 text-white">
+                            <Truck size={10} className="shrink-0" /> {item.transporteur}
+                          </span>
+                        )}
+                        {item.priceTnd != null && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600/90 text-white">
+                            {item.priceTnd} TND
+                          </span>
+                        )}
+                        {item.priceEur != null && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600/90 text-white">
+                            {item.priceEur} €
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -427,6 +441,41 @@ export default function Lost() {
               <datalist id="lost-add-groups">
                 {groupNamesFor(addForm.cause).map(name => <option key={name} value={name} />)}
               </datalist>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Prix en dinars (optionnel)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={addForm.priceTnd}
+                    onChange={(e) => setAddForm({ ...addForm, priceTnd: e.target.value })}
+                    className={`${inputClass} pr-14`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">TND</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Prix en euros (optionnel)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={addForm.priceEur}
+                    onChange={(e) => setAddForm({ ...addForm, priceEur: e.target.value })}
+                    className={`${inputClass} pr-10`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">€</span>
+                </div>
+              </div>
             </div>
 
             <div>

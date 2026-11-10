@@ -14,6 +14,13 @@ const readCause = (body) => {
   return { cause, transporteur };
 };
 
+// Optional price: blank -> null, otherwise a non-negative number (NaN if invalid)
+const readPrice = (value) => {
+  if (value === '' || value === null || value === undefined) return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : NaN;
+};
+
 // @desc    Get all lost-article photos (non-deleted)
 // @route   GET /api/lost
 exports.getLostItems = async (req, res) => {
@@ -26,7 +33,7 @@ exports.getLostItems = async (req, res) => {
 };
 
 // @desc    Add one or more photos for a cause, optionally straight into a group
-// @route   POST /api/lost  { images: [url], cause, transporteur?, group? }
+// @route   POST /api/lost  { images: [url], cause, transporteur?, group?, priceTnd?, priceEur? }
 exports.createLostItems = async (req, res) => {
   try {
     const images = Array.isArray(req.body.images) ? req.body.images.filter(Boolean) : [];
@@ -34,7 +41,14 @@ exports.createLostItems = async (req, res) => {
     const { cause, transporteur } = readCause(req.body);
     if (!cause) return res.status(400).json({ message: 'Cause invalide' });
     const group = String(req.body.group || '').trim();
-    const items = await LostItem.insertMany(images.map((image) => ({ image, cause, transporteur, group })));
+    const priceTnd = readPrice(req.body.priceTnd);
+    const priceEur = readPrice(req.body.priceEur);
+    if (Number.isNaN(priceTnd) || Number.isNaN(priceEur)) {
+      return res.status(400).json({ message: 'Prix invalide' });
+    }
+    const items = await LostItem.insertMany(
+      images.map((image) => ({ image, cause, transporteur, group, priceTnd, priceEur }))
+    );
     res.status(201).json(items);
   } catch (error) {
     res.status(400).json({ message: error.message });
