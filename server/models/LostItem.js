@@ -1,11 +1,24 @@
 const mongoose = require('mongoose');
 
-// A photo of a lost article. Photos sharing the same `group` name are shown
-// together (e.g. "Last arrivage"); an empty group means the photo is ungrouped.
+// A photo of a lost article. `cause` says who lost it: Shein in Europe (never
+// reached us) or the transporteur on the way to us. Photos sharing the same
+// `group` name within a cause are shown together (e.g. "Last arrivage"); an
+// empty group means the photo is ungrouped.
 const lostItemSchema = new mongoose.Schema({
   image: {
     type: String,
     required: [true, 'La photo est requise'],
+    trim: true,
+  },
+  cause: {
+    type: String,
+    enum: ['shein', 'transporteur'],
+    default: 'shein',
+  },
+  // Transporteur name (like Colis.carrier), only meaningful when cause = transporteur
+  transporteur: {
+    type: String,
+    default: '',
     trim: true,
   },
   group: {
