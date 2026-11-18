@@ -14,6 +14,8 @@ import CarteCadeaux from './pages/CarteCadeaux';
 import WinningProducts from './pages/WinningProducts';
 import Stats from './pages/Stats';
 import Lost from './pages/Lost';
+import PublicRequest from './pages/PublicRequest';
+import Demandes from './pages/Demandes';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('malla_token');
@@ -31,6 +33,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/catalog" element={<Catalog />} />
+          <Route path="/demande" element={<PublicRequest />} />
 
           {/* Protected routes wrapped in Layout */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -44,6 +47,7 @@ function App() {
           <Route path="/produits-gagnants" element={<ProtectedRoute><WinningProducts /></ProtectedRoute>} />
           <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
           <Route path="/lost" element={<ProtectedRoute><Lost /></ProtectedRoute>} />
+          <Route path="/demandes" element={<ProtectedRoute><Demandes /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

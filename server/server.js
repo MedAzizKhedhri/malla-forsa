@@ -12,6 +12,9 @@ connectDB();
 
 const app = express();
 
+// Behind a reverse proxy (Render, Railway...) req.ip must be the visitor, not the proxy
+app.set('trust proxy', 1);
+
 // Middleware
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(o => o.trim());
 app.use(cors({ origin: allowedOrigins }));
@@ -26,6 +29,9 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
+// Public (no login): the Shein request form
+app.use('/api/public', require('./routes/publicRoutes'));
+
 // New Broker MVP routes (Protected)
 app.use('/api/clients', protect, require('./routes/clientRoutes'));
 app.use('/api/colis', protect, require('./routes/colisRoutes'));
@@ -38,6 +44,7 @@ app.use('/api/carte-cadeaux', protect, require('./routes/carteCadeauRoutes'));
 app.use('/api/winning-products', protect, require('./routes/winningProductRoutes'));
 app.use('/api/stats', protect, require('./routes/statsRoutes'));
 app.use('/api/lost', protect, require('./routes/lostItemRoutes'));
+app.use('/api/shein-requests', protect, require('./routes/sheinRequestRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {

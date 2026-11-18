@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package, Users, Mail,
   LayoutDashboard, Globe, LogOut, MoreHorizontal, X,
-  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp, ImageOff
+  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp, ImageOff, Inbox
 } from 'lucide-react';
+import api from '../lib/api';
 
 // Full sidebar navigation (desktop)
 const navigation = [
   { name: 'Tableau de Bord', href: '/', icon: LayoutDashboard },
   { name: 'Clients', href: '/clients', icon: Users },
+  { name: 'Demandes', href: '/demandes', icon: Inbox, badge: true },
   { name: 'Paniers', href: '/paniers', icon: ShoppingCart },
   { name: 'Colis', href: '/colis', icon: Package },
   { name: 'Statistiques', href: '/stats', icon: TrendingUp },
@@ -31,6 +33,7 @@ const primaryTabs = [
 
 // Secondary items accessible via the "Plus" sheet on mobile
 const secondaryItems = [
+  { name: 'Demandes', href: '/demandes', icon: Inbox, badge: true },
   { name: 'Statistiques', href: '/stats', icon: TrendingUp },
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
@@ -44,6 +47,12 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
+  // Shein requests nobody has looked at yet, shown as a badge; refreshed on every page change
+  const [newRequests, setNewRequests] = useState(0);
+
+  useEffect(() => {
+    api.get('/shein-requests/count').then(res => setNewRequests(res.data.count)).catch(() => {});
+  }, [location.pathname]);
 
   const isActive = (href) => location.pathname === href;
 
@@ -86,6 +95,11 @@ export default function Layout({ children }) {
                 >
                   <Icon className={`w-5 h-5 ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
                   {item.name}
+                  {item.badge && newRequests > 0 && (
+                    <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                      {newRequests}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -145,7 +159,12 @@ export default function Layout({ children }) {
                 : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           >
-            <MoreHorizontal size={22} strokeWidth={isMoreActive ? 2.5 : 1.75} />
+            <span className="relative">
+              <MoreHorizontal size={22} strokeWidth={isMoreActive ? 2.5 : 1.75} />
+              {newRequests > 0 && (
+                <span className="absolute -top-0.5 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
+              )}
+            </span>
             <span className="text-[10px] font-medium">Plus</span>
           </button>
         </div>
@@ -188,6 +207,11 @@ export default function Layout({ children }) {
                   >
                     <Icon size={20} className={active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} />
                     {item.name}
+                    {item.badge && newRequests > 0 && (
+                      <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                        {newRequests}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
