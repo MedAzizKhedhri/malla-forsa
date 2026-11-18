@@ -1,15 +1,14 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../lib/api';
-import { Loader2, Plus, X, ImageIcon, ShoppingBag, CheckCircle2, MessageCircle, Link2, Phone, MessageSquare } from 'lucide-react';
+import { whatsappNumber, whatsappLink } from '../lib/whatsapp';
+import { Loader2, Plus, X, ImageIcon, ShoppingBag, CheckCircle2, MessageCircle, Link2, Phone, MessageSquare, Search } from 'lucide-react';
 
 const MAX_IMAGES = 10;
 const MAX_ITEMS = 10;
 
 const inputClass = 'w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500';
 const emptyItem = () => ({ link: '', details: '' });
-
-// WhatsApp number of the shop (international format, digits only), set in the client env
-const whatsappNumber = String(import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '');
 
 const errorMessage = (err, fallback) => err.response?.data?.message || fallback;
 
@@ -81,6 +80,12 @@ export default function PublicRequest() {
           <h1 className="text-xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent tracking-tighter">
             Malla Forssa
           </h1>
+          <Link
+            to="/suivi"
+            className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            <Search size={14} /> Suivre ma demande
+          </Link>
         </div>
       </header>
 
@@ -98,7 +103,7 @@ export default function PublicRequest() {
             </div>
             {whatsappNumber && (
               <a
-                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Bonjour, je viens d'envoyer la demande ${reference}.`)}`}
+                href={whatsappLink(`Bonjour, je viens d'envoyer la demande ${reference}.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-3 rounded-lg transition-colors"
@@ -106,9 +111,20 @@ export default function PublicRequest() {
                 <MessageCircle size={18} /> Nous écrire sur WhatsApp
               </a>
             )}
-            <button onClick={reset} className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
-              Envoyer une autre demande
-            </button>
+            <p className="text-xs text-slate-500">
+              Gardez cette référence : elle vous permet de suivre l'avancement de votre demande.
+            </p>
+            <div className="flex flex-col items-center gap-2">
+              <Link
+                to={`/suivi?ref=${encodeURIComponent(reference)}`}
+                className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                <Search size={14} /> Suivre ma demande
+              </Link>
+              <button onClick={reset} className="text-sm font-semibold text-slate-500 hover:underline cursor-pointer">
+                Envoyer une autre demande
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -16,6 +16,7 @@ import Stats from './pages/Stats';
 import Lost from './pages/Lost';
 import PublicRequest from './pages/PublicRequest';
 import Demandes from './pages/Demandes';
+import Suivi from './pages/Suivi';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('malla_token');
@@ -34,6 +35,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/demande" element={<PublicRequest />} />
+          <Route path="/suivi" element={<Suivi />} />
 
           {/* Protected routes wrapped in Layout */}
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

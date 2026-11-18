@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const r2 = require('../config/r2');
 const { createRateLimiter } = require('../middleware/rateLimit');
-const { createRequest } = require('../controllers/publicRequestController');
+const { createRequest, getRequestStatus } = require('../controllers/publicRequestController');
 
 // Everything here is open to visitors who aren't logged in, so it is limited per IP.
 const router = express.Router();
@@ -19,6 +19,12 @@ const requestLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   max: 10,
   message: 'Trop de demandes envoyées, réessayez plus tard.',
+});
+// Tight on purpose: this is the only place someone could try to guess references and phones
+const statusLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 15,
+  message: 'Trop de tentatives, réessayez dans quelques minutes.',
 });
 
 const upload = multer({
@@ -60,5 +66,6 @@ router.post('/upload', uploadLimiter, handleUpload, async (req, res) => {
 });
 
 router.post('/requests', requestLimiter, createRequest);
+router.post('/requests/status', statusLimiter, getRequestStatus);
 
 module.exports = router;

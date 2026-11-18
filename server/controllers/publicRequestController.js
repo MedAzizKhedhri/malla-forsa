@@ -1,6 +1,6 @@
 const SheinRequest = require('../models/SheinRequest');
 const Counter = require('../models/Counter');
-const { normalizePhone } = require('../utils/phone');
+const { normalizePhone, samePhone } = require('../utils/phone');
 
 const MAX_ITEMS = 10;
 const MAX_IMAGES = 10;
@@ -92,4 +92,41 @@ exports.createRequest = async (req, res) => {
     res.status(500).json({ message: 'Une erreur est survenue, réessayez.' });
   }
 };
+// "sh-12", "SH 0012" or just "12" all mean SH-0012
+const normalizeReference = (raw) => {
+  const digits = String(raw || '').match(/\d+/);
+  return digits ? `SH-${digits[0].padStart(4, '0')}` : null;
+};
+
+// @desc    Let a client follow their request. Needs the reference AND the phone number
+//          they used, so references can't be guessed one by one. Only status-level
+//          information is returned (no price estimate, no private notes).
+// @route   POST /api/public/requests/status  { reference, phone }
+exports.getRequestStatus = async (req, res) => {
+  try {
+    const reference = normalizeReference(req.body && req.body.reference);
+    const phone = normalizePhone(req.body && req.body.phone);
+    const notFound = { message: 'Aucune demande trouvée avec ces informations.' };
+    if (!reference || !phone) return res.status(404).json(notFound);
+
+    const request = await SheinRequest.findOne({ reference, isDeleted: false });
+    if (!request || !samePhone(request.phone, phone)) return res.status(404).json(notFound);
+
+    res.json({
+      reference: request.reference,
+      name: request.name,
+      status: request.status,
+      createdAt: request.createdAt,
+      updatedAt: request.updatedAt,
+      itemCount: request.items.filter((i) => i.link).length,
+      imageCount: request.images.length,
+      rejectionReason: request.status === 'rejected' ? request.rejectionReason : '',
+    });
+  } catch (error) {
+    console.error('[public request status] failed:', error);
+    res.status(500).json({ message: 'Une erreur est survenue, réessayez.' });
+  }
+};
+
 exports.extractSheinLink = extractSheinLink;
+exports.normalizeReference = normalizeReference;
