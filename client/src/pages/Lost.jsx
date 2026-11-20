@@ -204,6 +204,15 @@ export default function Lost() {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  // Select (or unselect) every photo of a group at once, to edit the whole group together
+  const toggleSection = (section) => {
+    const ids = section.items.map(i => i._id);
+    const allSelected = ids.every(id => selected.includes(id));
+    setSelected(prev => (allSelected
+      ? prev.filter(id => !ids.includes(id))
+      : [...new Set([...prev, ...ids])]));
+  };
+
   const openCauseChange = () => {
     setCauseForm({
       cause: tab === 'shein' ? 'transporteur' : 'shein',
@@ -406,6 +415,12 @@ export default function Lost() {
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
                 {section.items.length}
               </span>
+              <button
+                onClick={() => toggleSection(section)}
+                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+              >
+                {section.items.every(i => selected.includes(i._id)) ? 'Tout désélectionner' : 'Tout sélectionner'}
+              </button>
               {section.name && (
                 <div className="flex items-center gap-1 ml-auto">
                   <button
