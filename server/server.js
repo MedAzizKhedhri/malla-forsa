@@ -45,6 +45,7 @@ app.use('/api/winning-products', protect, require('./routes/winningProductRoutes
 app.use('/api/stats', protect, require('./routes/statsRoutes'));
 app.use('/api/lost', protect, require('./routes/lostItemRoutes'));
 app.use('/api/shein-requests', protect, require('./routes/sheinRequestRoutes'));
+app.use('/api/promo-codes', protect, require('./routes/promoCodeRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {
@@ -55,4 +56,6 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  // Background check of coupon websites for new Shein/Zalando promo codes
+  require('./services/promoWatcher').startPromoWatcher();
 });

@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package, Users, Mail,
   LayoutDashboard, Globe, LogOut, MoreHorizontal, X,
-  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp, ImageOff, Inbox
+  ShoppingCart, KeyRound, Gift, Sparkles, TrendingUp, ImageOff, Inbox, BadgePercent
 } from 'lucide-react';
 import api from '../lib/api';
+import NotificationBell from './NotificationBell';
 
 // Full sidebar navigation (desktop)
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { name: 'Statistiques', href: '/stats', icon: TrendingUp },
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
+  { name: 'Codes Promo', href: '/codes-promo', icon: BadgePercent },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },
   { name: 'Lost', href: '/lost', icon: ImageOff },
   { name: 'Identifiants', href: '/credentials', icon: KeyRound },
@@ -37,6 +39,7 @@ const secondaryItems = [
   { name: 'Statistiques', href: '/stats', icon: TrendingUp },
   { name: 'Emails', href: '/emails', icon: Mail },
   { name: 'Cartes Cadeaux', href: '/carte-cadeaux', icon: Gift },
+  { name: 'Codes Promo', href: '/codes-promo', icon: BadgePercent },
   { name: 'Produits Gagnants', href: '/produits-gagnants', icon: Sparkles },
   { name: 'Lost', href: '/lost', icon: ImageOff },
   { name: 'Identifiants', href: '/credentials', icon: KeyRound },
@@ -68,16 +71,22 @@ export default function Layout({ children }) {
           Malla Forssa
         </span>
         <span className="ml-2 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Import</span>
+        <div className="ml-auto">
+          <NotificationBell align="right" />
+        </div>
       </header>
 
       {/* ── DESKTOP SIDEBAR ───────────────────────────────────── */}
-      <aside className="hidden md:flex md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 md:h-screen md:sticky top-0 z-10 shadow-sm flex-col justify-between">
+      <aside className="hidden md:flex md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 md:h-screen md:sticky top-0 z-30 shadow-sm flex-col justify-between">
         <div>
-          <div className="p-6">
-            <h1 className="text-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent tracking-tighter">
-              Malla Forssa
-            </h1>
-            <p className="text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">Import Broker</p>
+          <div className="p-6 flex items-start justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent tracking-tighter">
+                Malla Forssa
+              </h1>
+              <p className="text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">Import Broker</p>
+            </div>
+            <NotificationBell />
           </div>
           <nav className="px-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {

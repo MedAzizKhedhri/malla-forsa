@@ -17,6 +17,7 @@ import Lost from './pages/Lost';
 import PublicRequest from './pages/PublicRequest';
 import Demandes from './pages/Demandes';
 import Suivi from './pages/Suivi';
+import PromoCodes from './pages/PromoCodes';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('malla_token');
@@ -50,6 +51,7 @@ function App() {
           <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
           <Route path="/lost" element={<ProtectedRoute><Lost /></ProtectedRoute>} />
           <Route path="/demandes" element={<ProtectedRoute><Demandes /></ProtectedRoute>} />
+          <Route path="/codes-promo" element={<ProtectedRoute><PromoCodes /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

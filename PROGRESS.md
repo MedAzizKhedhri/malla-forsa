@@ -114,6 +114,24 @@ to the old Article model despite the similar name), Auth/security.
 
 ## 5. Session Log (most recent first)
 
+### 2026-11-20 — Promo code watcher
+- New **Codes Promo** page (`/codes-promo`) + a notification bell (sidebar header on
+  desktop, top header on mobile) with the count of new Shein/Zalando promo codes.
+- `server/services/promoWatcher.js` checks coupon websites every
+  `PROMO_CHECK_INTERVAL_HOURS` (default 3h, first run 1 min after boot) and on the page's
+  "Vérifier maintenant" button. Results go to the `PromoCode` model (unique per
+  source + offer id); `seen: false` drives the bell, and opening the page marks them seen.
+- Sources (the only ones found that serve offers as plain HTML; Coupert, Hotdeals,
+  Wethrift, Ma-Reduc, Lareduction and Zalando's own site block bots or hide codes):
+  Scontify (Italy, code visible), Radins (France, code hidden behind "Voir le code" so
+  the card links to Radins), Promocode.ac (no country). Each parser is best effort:
+  if a site changes its markup that source returns nothing / shows in the page's
+  "sources indisponibles" warning. The first check of a source stores everything as
+  already seen, so day one doesn't flood the bell.
+- Checks only run while the server is awake (a sleeping free host means no checks).
+- `.claude/launch.json` gained `api` (port 5000) and `client` (5173) entries: the single
+  `dev` entry made the preview tool give the API `PORT=5173`, clashing with Vite.
+
 ### 2026-07-17 — Session 6
 - User feedback: the client's panier and the global (shared-batch) panier were conflated —
   `OrderSession.client` meant a Panier could only ever belong to one client, with no way to
