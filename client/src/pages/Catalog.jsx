@@ -54,11 +54,33 @@ export default function Catalog() {
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <div className="text-center max-w-xl mx-auto mb-12">
+        <div className="text-center max-w-xl mx-auto mb-8">
           <h2 className="text-3xl font-black tracking-tight">Articles Disponibles</h2>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
             Découvrez nos articles importés favoris. Contactez-nous pour passer commande directement.
           </p>
+        </div>
+
+        {/* Shein request form */}
+        <div className="max-w-xl mx-auto mb-12 rounded-2xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/60 dark:bg-indigo-950/20 p-5 text-center">
+          <h3 className="font-bold text-lg">Un article Shein vous plaît ?</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Envoyez-nous le lien ou une photo, nous le commandons pour vous.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap mt-4">
+            <Link
+              to="/demande"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+            >
+              <ShoppingBag size={16} /> Faire une demande
+            </Link>
+            <Link
+              to="/suivi"
+              className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Suivre ma demande
+            </Link>
+          </div>
         </div>
 
         {loading ? (
