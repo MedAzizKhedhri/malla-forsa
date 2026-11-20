@@ -185,7 +185,7 @@ export default function Colis() {
       }
       const screenshots = [...(colisDetails.screenshots || []), ...uploaded];
       const res = await api.put(`/colis/${colisDetails._id}`, { screenshots });
-      setColisDetails(res.data);
+      setColisDetails(prev => ({ ...prev, screenshots: res.data.screenshots }));
       fetchColis();
       toast.success('Capture(s) ajoutée(s).');
     } catch {
@@ -200,7 +200,7 @@ export default function Colis() {
     try {
       const screenshots = (colisDetails.screenshots || []).filter(s => s !== url);
       const res = await api.put(`/colis/${colisDetails._id}`, { screenshots });
-      setColisDetails(res.data);
+      setColisDetails(prev => ({ ...prev, screenshots: res.data.screenshots }));
       fetchColis();
     } catch {
       toast.error('Erreur lors de la suppression de la capture.');
@@ -535,7 +535,7 @@ export default function Colis() {
                     <button
                       type="button"
                       onClick={() => handleRemoveScreenshot(url)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover/shot:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
                       title="Supprimer"
                     >
                       <X size={10} />

@@ -269,7 +269,7 @@ export default function Clients() {
       const res = await api.put(`/client-paniers/${selectedOrder._id}`, {
         screenshots: [...(selectedOrder.screenshots || []), ...uploaded],
       });
-      setSelectedOrder(res.data);
+      setSelectedOrder(prev => ({ ...prev, screenshots: res.data.screenshots }));
       setOrders(prev => prev.map(o => o._id === res.data._id ? res.data : o));
     } catch {
       toast.error('Erreur lors du téléversement des images.');
@@ -283,7 +283,7 @@ export default function Clients() {
       const res = await api.put(`/client-paniers/${selectedOrder._id}`, {
         screenshots: (selectedOrder.screenshots || []).filter(s => s !== url),
       });
-      setSelectedOrder(res.data);
+      setSelectedOrder(prev => ({ ...prev, screenshots: res.data.screenshots }));
       setOrders(prev => prev.map(o => o._id === res.data._id ? res.data : o));
     } catch {
       toast.error('Erreur lors de la suppression de la capture.');

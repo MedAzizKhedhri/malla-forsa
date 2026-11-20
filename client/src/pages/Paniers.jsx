@@ -27,6 +27,7 @@ export default function Paniers() {
   const [editingPanier, setEditingPanier] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
+  const [uploadingDetailScreenshots, setUploadingDetailScreenshots] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -127,6 +128,44 @@ export default function Paniers() {
 
   const removeScreenshot = (url) => {
     setForm(prev => ({ ...prev, screenshots: prev.screenshots.filter(s => s !== url) }));
+  };
+
+  const handleDetailScreenshotUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !panierDetails) return;
+    setUploadingDetailScreenshots(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const data = new FormData();
+        data.append('image', file);
+        const res = await api.post('/upload', data, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        uploaded.push(res.data);
+      }
+      const screenshots = [...(panierDetails.screenshots || []), ...uploaded];
+      const res = await api.put(`/order-sessions/${panierDetails._id}`, { screenshots });
+      setPanierDetails(prev => ({ ...prev, screenshots: res.data.screenshots }));
+      fetchPaniers();
+      toast.success('Capture(s) ajoutée(s).');
+    } catch {
+      toast.error('Erreur lors du téléversement des images.');
+    } finally {
+      setUploadingDetailScreenshots(false);
+    }
+  };
+
+  const handleRemoveDetailScreenshot = async (url) => {
+    if (!panierDetails) return;
+    try {
+      const screenshots = (panierDetails.screenshots || []).filter(s => s !== url);
+      const res = await api.put(`/order-sessions/${panierDetails._id}`, { screenshots });
+      setPanierDetails(prev => ({ ...prev, screenshots: res.data.screenshots }));
+      fetchPaniers();
+    } catch {
+      toast.error('Erreur lors de la suppression de la capture.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -435,22 +474,34 @@ export default function Paniers() {
                   )}
                 </div>
 
-                {panierDetails.screenshots?.length > 0 && (
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
-                    <h3 className="font-bold text-lg mb-3">Captures d'écran</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {panierDetails.screenshots.map((url, i) => (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+                  <h3 className="font-bold text-lg mb-3">Captures d'écran</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(panierDetails.screenshots || []).map((url, i) => (
+                      <div key={i} className="relative h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 group/shot">
                         <img
-                          key={i}
                           src={url}
                           alt="Capture"
-                          className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => setLightboxSrc(url)}
                         />
-                      ))}
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDetailScreenshot(url)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                          title="Supprimer"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                    <label className="flex items-center justify-center gap-1 h-24 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all text-xs text-slate-500 text-center px-2">
+                      {uploadingDetailScreenshots ? <Loader2 size={16} className="animate-spin text-indigo-500" /> : <ImageIcon size={16} className="text-slate-400" />}
+                      {uploadingDetailScreenshots ? 'Envoi...' : 'Ajouter'}
+                      <input type="file" accept="image/*" multiple onChange={handleDetailScreenshotUpload} disabled={uploadingDetailScreenshots} className="hidden" />
+                    </label>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Colis column */}
