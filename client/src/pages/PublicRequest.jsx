@@ -190,7 +190,7 @@ export default function PublicRequest() {
 
             <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-4 space-y-3">
               <div>
-                <h3 className="font-bold flex items-center gap-2"><Link2 size={16} className="text-slate-400" /> Liens Shein</h3>
+                <h3 className="font-bold flex items-center gap-2"><Link2 size={16} className="text-slate-400" /> Liens Shein (optionnel)</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Collez le lien de chaque article (ou le message du bouton « Partager » de Shein).
                 </p>
@@ -239,10 +239,9 @@ export default function PublicRequest() {
 
             <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-4 space-y-3">
               <div>
-                <h3 className="font-bold flex items-center gap-2"><ImageIcon size={16} className="text-slate-400" /> Photos</h3>
+                <h3 className="font-bold flex items-center gap-2"><ImageIcon size={16} className="text-slate-400" /> Photos (optionnel)</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Captures d'écran ou photos des articles ({images.length}/{MAX_IMAGES}). Il faut au moins une photo ou un lien.
-                </p>
+                  Captures d'écran ou photos des articles ({images.length}/{MAX_IMAGES}).                </p>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {images.map(url => (

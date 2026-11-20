@@ -73,10 +73,6 @@ exports.createRequest = async (req, res) => {
     const images = rawImages.filter((u) => typeof u === 'string' && base && u.startsWith(`${base}/`));
     if (images.length !== rawImages.length) return res.status(400).json({ message: 'Photo invalide.' });
 
-    if (!images.length && !items.some((i) => i.link)) {
-      return res.status(400).json({ message: 'Ajoutez au moins une photo ou un lien Shein.' });
-    }
-
     const request = await SheinRequest.create({
       reference: await nextReference(),
       name,
