@@ -70,6 +70,24 @@ exports.setLostItemsCause = async (req, res) => {
   }
 };
 
+// @desc    Set the price of the selected photos (a blank price clears it)
+// @route   PUT /api/lost/price  { ids: [id], priceTnd, priceEur }
+exports.setLostItemsPrice = async (req, res) => {
+  try {
+    const ids = cleanIds(req.body.ids);
+    if (!ids.length) return res.status(400).json({ message: 'Aucune photo sélectionnée' });
+    const priceTnd = readPrice(req.body.priceTnd);
+    const priceEur = readPrice(req.body.priceEur);
+    if (Number.isNaN(priceTnd) || Number.isNaN(priceEur)) {
+      return res.status(400).json({ message: 'Prix invalide' });
+    }
+    await LostItem.updateMany({ _id: { $in: ids }, isDeleted: false }, { priceTnd, priceEur });
+    res.json({ message: 'Prix mis à jour' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 // @desc    Put photos into a group (empty name removes them from their group)
 // @route   PUT /api/lost/group  { ids: [id], group }
 exports.setLostItemsGroup = async (req, res) => {

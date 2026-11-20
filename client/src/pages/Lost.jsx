@@ -3,7 +3,7 @@ import api from '../lib/api';
 import { useAppToast } from '../components/ToastProvider';
 import {
   Plus, Loader2, Trash2, Edit, Check, X, FolderPlus, FolderMinus, ImageOff,
-  ImageIcon, Globe, Truck, ArrowRightLeft,
+  ImageIcon, Globe, Truck, ArrowRightLeft, Tag,
 } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Modal from '../components/Modal';
@@ -66,6 +66,49 @@ function CauseFields({ value, onChange, transporteurs }) {
   );
 }
 
+// Optional prices in dinars and euros. Works on any object holding priceTnd / priceEur.
+function PriceFields({ value, onChange }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium mb-1">Prix en dinars (optionnel)</label>
+        <div className="relative">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={value.priceTnd}
+            onChange={(e) => onChange({ ...value, priceTnd: e.target.value })}
+            className={`${inputClass} pr-14`}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">TND</span>
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Prix en euros (optionnel)</label>
+        <div className="relative">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={value.priceEur}
+            onChange={(e) => onChange({ ...value, priceEur: e.target.value })}
+            className={`${inputClass} pr-10`}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">€</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Price as it should show in an input: '' when none
+const priceToInput = (n) => (n === null || n === undefined ? '' : String(n));
+
 export default function Lost() {
   const toast = useAppToast();
 
@@ -78,6 +121,7 @@ export default function Lost() {
   const [addForm, setAddForm] = useState(null); // { cause, transporteur, group, images: [url] }
   const [uploading, setUploading] = useState(false);
   const [causeForm, setCauseForm] = useState(null); // { cause, transporteur }
+  const [priceForm, setPriceForm] = useState(null); // { priceTnd, priceEur }
   const [groupModal, setGroupModal] = useState(null); // { mode: 'assign' | 'rename', from? }
   const [groupName, setGroupName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -178,6 +222,29 @@ export default function Lost() {
       fetchItems();
     } catch {
       toast.error('Erreur lors de la mise à jour.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Start from the current price when every selected photo has the same one
+  const openPriceEdit = () => {
+    const chosen = items.filter(i => selected.includes(i._id));
+    const common = (key) => (chosen.every(i => i[key] === chosen[0][key]) ? priceToInput(chosen[0][key]) : '');
+    setPriceForm({ priceTnd: common('priceTnd'), priceEur: common('priceEur') });
+  };
+
+  const handlePriceSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.put('/lost/price', { ids: selected, ...priceForm });
+      toast.success('Prix mis à jour.');
+      setSelected([]);
+      setPriceForm(null);
+      fetchItems();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur lors de la mise à jour.');
     } finally {
       setSaving(false);
     }
@@ -307,6 +374,9 @@ export default function Lost() {
           </button>
           <button onClick={removeFromGroup} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800 cursor-pointer">
             <FolderMinus size={15} /> Retirer du groupe
+          </button>
+          <button onClick={openPriceEdit} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800 cursor-pointer">
+            <Tag size={15} /> Modifier le prix
           </button>
           <button onClick={openCauseChange} className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-800 cursor-pointer">
             <ArrowRightLeft size={15} /> Changer la cause
@@ -443,40 +513,7 @@ export default function Lost() {
               </datalist>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Prix en dinars (optionnel)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={addForm.priceTnd}
-                    onChange={(e) => setAddForm({ ...addForm, priceTnd: e.target.value })}
-                    className={`${inputClass} pr-14`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">TND</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Prix en euros (optionnel)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={addForm.priceEur}
-                    onChange={(e) => setAddForm({ ...addForm, priceEur: e.target.value })}
-                    className={`${inputClass} pr-10`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">€</span>
-                </div>
-              </div>
-            </div>
+            <PriceFields value={addForm} onChange={setAddForm} />
 
             <div>
               <label className="block text-sm font-medium mb-1">Photos *</label>
@@ -513,6 +550,37 @@ export default function Lost() {
               <button
                 type="submit"
                 disabled={saving || uploading || addForm.images.length === 0}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-70"
+              >
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Edit price of selected photos */}
+      <Modal open={!!priceForm} onClose={() => setPriceForm(null)} maxWidth="md">
+        <h2 className="text-xl font-bold mb-1">Modifier le prix</h2>
+        <p className="text-sm text-slate-500 mb-5">
+          {selected.length} photo{selected.length > 1 ? 's' : ''} sélectionnée{selected.length > 1 ? 's' : ''}.
+          Laissez un champ vide pour supprimer ce prix.
+        </p>
+        {priceForm && (
+          <form onSubmit={handlePriceSubmit} className="space-y-4">
+            <PriceFields value={priceForm} onChange={setPriceForm} />
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => setPriceForm(null)}
+                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-2 disabled:opacity-70"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
